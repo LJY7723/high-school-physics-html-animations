@@ -12,6 +12,11 @@
 - Parallel changes use separate worktrees and task branches. Integrate by reviewing and merging commits; do not share a mutable working tree between concurrent agents.
 - Record meaningful task handoffs in `docs/handoffs/` so an agent can resume without private chat history.
 
+## Build
+
+- `dev/meter.html` is the single source of truth for the multimeter page; `index.html` is a generated artifact. Regenerate it with `projects/multimeter/tools/build-standalone.mjs` and never hand-edit it. The script's `--check` mode is the drift guard, and `--unpack` recovers edits that slipped into the generated page.
+- Keep build scripts project-local, dependency-free plain Node while each project owns its own pipeline; skip root-level build tooling until several projects share a concrete need.
+
 ## Revisit when
 
 - Split a project into a separate repository if it needs independent access control, release/versioning, or a substantially different toolchain.
