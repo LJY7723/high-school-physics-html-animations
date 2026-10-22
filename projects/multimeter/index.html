@@ -69,6 +69,29 @@ html,body{margin:0;height:100%;overflow:hidden;background:#e9e3d7;font-family:va
   background:#fffdf8;font:500 11.5px/1 var(--zh);color:#3b332b;cursor:pointer;transition:.15s}
 .presets button:hover{border-color:#b8a88c}
 .presets button.on{background:#2f2b26;border-color:#2f2b26;color:#f8f3e6}
+.quiz{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:8;width:min(660px,calc(100vw - 470px));min-width:320px;padding:10px 14px 11px;border:1px solid var(--line);border-radius:14px;background:rgba(255,252,245,.95);backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(90,72,45,.12);display:none}
+body.quiz-on .quiz{display:block}
+body.quiz-on .lesson{display:none}
+.quiz-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.quiz-top b{font-size:12px;flex:none}
+.quiz-q{flex:1;min-width:0;font-size:11.5px;line-height:1.4;color:var(--ink)}
+.quiz-nav{display:flex;gap:5px;flex:none}
+.quiz-nav button{border:1px solid var(--line);border-radius:8px;background:#fffdf8;color:var(--ink);padding:6px 8px;font:500 11px var(--zh);cursor:pointer}
+.quiz-nav .quiz-next{background:#2f2b26;color:#fff;border-color:#2f2b26}
+.quiz-ans{display:flex;align-items:center;gap:7px}
+.quiz-ans label{font-size:11.5px;color:var(--muted);flex:none}
+.quiz-ans input{flex:0 1 150px;min-width:70px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;font:600 13px var(--zh);color:var(--ink);outline:none}
+.quiz-ans input:focus{border-color:#b0392c}
+.quiz-ans em{font-style:normal;font-size:12px;color:var(--muted);width:24px;flex:none}
+.quiz-ans .quiz-submit{border:0;border-radius:8px;background:#b0392c;color:#fff;padding:8px 12px;font:600 11.5px var(--zh);cursor:pointer;white-space:nowrap}
+.quiz-res{flex:1;min-width:0;font-size:11.5px;line-height:1.45}
+.quiz-res.ok{color:#3f5c34}
+.quiz-res.bad{color:#a03225}
+.quiz-hist{display:flex;gap:3px;margin-left:auto;flex:none;align-items:center}
+.quiz-hist b{font-size:11px;color:var(--muted);font-weight:500;margin-right:2px}
+.quiz-hist i{font-style:normal;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;background:#e7e0d2;color:var(--muted)}
+.quiz-hist i.ok{background:#d9e5cf;color:#3f5c34}
+.quiz-hist i.bad{background:#f3d2cc;color:#a03225}
 .hint{position:fixed;left:26px;bottom:18px;z-index:5;font-size:12px;color:#8b8071;letter-spacing:.02em;pointer-events:none}
 .toast{position:fixed;left:50%;bottom:64px;transform:translate(-50%,14px);z-index:20;max-width:70vw;
   padding:10px 18px;border-radius:11px;background:rgba(42,36,30,.92);color:#fdf6e7;font-size:13px;
@@ -91,8 +114,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#e9e3d7;font-family:va
   .panel.left.collapsed{width:42px;padding:8px}.panel.left.collapsed .panel-title{margin:0;justify-content:center}
   .panel.right{width:min(210px,54vw);top:auto;bottom:10px;right:10px;padding:10px;background:rgba(255,252,245,.95)}.panel.right .ro{gap:4px}.panel.right .line{font-size:10px}.panel.right .big{padding:8px 10px}.panel.right .big span{font-size:22px}.panel.right .status{font-size:10px;margin-top:6px;padding:6px 8px}.panel.right .act{margin-top:6px}.panel.right .act button{padding:7px 4px;font-size:10px}
   .panel.cam{display:none}.lesson{left:10px;bottom:10px;transform:none;width:calc(100vw - 240px);min-width:0;padding:8px 10px;gap:6px}.lesson-copy span{font-size:10px}.lesson-copy b{font-size:11px}.lesson-nav button{padding:6px 7px;font-size:10px}.hint{display:none}
+  .quiz{top:46px;left:10px;transform:none;width:calc(100vw - 20px);min-width:0;padding:8px 10px}.quiz-ans{flex-wrap:wrap}.quiz-ans input{flex:1 1 90px}.quiz-hist{margin-left:0}
 }
-@media (max-width:560px){.lesson{bottom:calc(210px + env(safe-area-inset-bottom));left:10px;width:calc(100vw - 20px)}.panel.right{bottom:10px;right:10px;width:calc(100vw - 20px);max-height:195px;overflow:auto}.panel.left{width:min(190px,53vw);max-height:42vh;bottom:auto}.panel.left:not(.collapsed){max-height:42vh}.hud p{display:none}}
+@media (max-width:560px){.lesson{bottom:calc(210px + env(safe-area-inset-bottom));left:10px;width:calc(100vw - 20px)}.quiz{top:auto;bottom:calc(205px + env(safe-area-inset-bottom));left:10px;transform:none;width:calc(100vw - 20px)}.quiz-ans{flex-wrap:wrap}.quiz-ans input{flex:1 1 90px}.quiz-hist{margin-left:0}.panel.right{bottom:10px;right:10px;width:calc(100vw - 20px);max-height:195px;overflow:auto}.panel.left{width:min(190px,53vw);max-height:42vh;bottom:auto}.panel.left:not(.collapsed){max-height:42vh}.hud p{display:none}}
 </style>
 </head>
 <body>
@@ -104,6 +128,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#e9e3d7;font-family:va
 </div>
 
 <div class="tools">
+  <button id="btnQuiz">练习模式</button>
   <button id="btnReset">复位视角</button>
   <button id="btnFull">全屏</button>
 </div>
@@ -169,6 +194,19 @@ html,body{margin:0;height:100%;overflow:hidden;background:#e9e3d7;font-family:va
 
 <div class="hint">拖动＝旋转 ｜ Shift+拖动 或 右键拖动＝平移机位 ｜ 滚轮＝缩放 ｜ 右下角可精确调节</div>
 <div class="lesson" aria-live="polite"><div class="lesson-copy"><b id="lessonTitle">实验步骤 1 / 4</b><span id="lessonText"></span></div><div class="lesson-nav"><button id="lessonPrev" type="button">上一步</button><button id="lessonNext" class="lesson-next" type="button">下一步</button></div></div>
+<div class="quiz" id="quizBar" aria-live="polite">
+  <div class="quiz-top"><b id="quizNo">练习 第 1 题</b><span class="quiz-q" id="quizQ"></span>
+    <span class="quiz-nav"><button id="quizSkip" type="button">跳过</button><button id="quizGo" class="quiz-next" type="button">下一题</button></span>
+  </div>
+  <div class="quiz-ans">
+    <label for="quizInput">你的读数</label>
+    <input id="quizInput" type="text" inputmode="decimal" placeholder="如 1.50 / 47000 / 47k" autocomplete="off">
+    <em id="quizUnit">V</em>
+    <button id="quizSubmit" class="quiz-submit" type="button">提交判分</button>
+    <span class="quiz-res" id="quizRes">提交后在这里看逐项判分</span>
+    <span class="quiz-hist" id="quizHist"><b>记录</b></span>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1083,6 +1121,82 @@ document.addEventListener('keydown',e=>{
   else if(e.key.toLowerCase()==='h')$('btnReset').click();
 });
 
+/* ---------- 练习判分 ---------- */
+const QUIZ_POOL = ['batt', 'res', 'diodeF'];
+const RES_POOL = [120, 470, 1200, 4700, 15000, 47000];
+const quiz = {n:0, hist:[], cur:null};
+function fmtRes(r){ return r >= 1000 ? (r/1000) + ' kΩ' : r + ' Ω'; }
+function quizValue(t){
+  if(t === 'batt') return {v:1.5, unit:'V', tol:0.08, ask:'测量干电池电压，读出电压值'};
+  if(t === 'diodeF') return {v:420, unit:'Ω', tol:130, ask:'正向测量二极管，读出它的正向电阻'};
+  const r = RES_POOL[Math.floor(Math.random()*RES_POOL.length)];
+  return {v:r, unit:'Ω', tol:r*0.06 + 3, ask:'用电阻挡测量一只定值电阻，读出阻值', res:r};
+}
+function setQuizRes(res){
+  const el = $('quizRes');
+  el.className = 'quiz-res' + (res ? (res.pass ? ' ok' : ' bad') : '');
+  el.textContent = res ? res.text : '提交后在这里看逐项判分';
+}
+function newQuestion(){
+  let t;
+  do { t = QUIZ_POOL[Math.floor(Math.random()*QUIZ_POOL.length)]; } while(quiz.cur && t === quiz.cur.type);
+  const q = quizValue(t);
+  q.type = t;
+  if(q.res !== undefined){
+    TARGETS.res.r = q.res; TARGETS.res.sub = fmtRes(q.res);
+    const b = document.querySelector('#gT button[data-k="res"]');
+    if(b) b.textContent = '电阻 ' + fmtRes(q.res);
+  }
+  quiz.cur = q;
+  quiz.n++;
+  $('quizNo').textContent = '练习 第 ' + quiz.n + ' 题';
+  $('quizQ').textContent = q.ask;
+  $('quizUnit').textContent = q.unit;
+  $('quizInput').value = '';
+  setQuizRes(null);
+  setTarget(t);
+}
+function parseReading(s){
+  s = String(s).trim().replace(/[ΩVΩv]/g, '');
+  const m = s.match(/^([0-9.]+)\s*(k|K|千)?$/);
+  if(!m) return NaN;
+  const v = parseFloat(m[1]);
+  return isFinite(v) ? (m[2] ? v*1000 : v) : NaN;
+}
+function submitQuiz(){
+  if(!quiz.cur) return;
+  const q = quiz.cur, r = RANGES[state.range];
+  const res = computeTarget();
+  const cType = r.kind === (q.type === 'batt' ? 'V' : 'R');
+  const plugged = state.plugged.red && state.plugged.black;
+  const cNorm = plugged && !(r.kind === 'R' && !state.ohmZero);
+  const cRange = !res.warn && res.f >= 0.15 && res.f <= 0.95;
+  const val = parseReading($('quizInput').value);
+  const cRead = isFinite(val) && Math.abs(val - q.v) <= q.tol;
+  const score = (cType?2:0) + (cNorm?2:0) + (cRange?2:0) + (cRead?4:0);
+  const marks = [['挡位', cType], ['规范', cNorm], ['量程', cRange], ['读数', cRead]]
+    .map(([n, ok]) => n + (ok ? '✓' : '✗')).join(' ');
+  const hints = [];
+  if(!cNorm) hints.push(cType && r.kind === 'R' && !state.ohmZero ? '电阻挡要先短接表笔调零' : '先插好红黑表笔');
+  if(!cRange) hints.push('换一挡让指针指到刻度中段（15%~95%）');
+  if(!cRead) hints.push('正确值约 ' + fmtRes(q.v) + (q.unit === 'V' ? '' : ''));
+  setQuizRes({pass: score >= 6, text: marks + ' → ' + score + '/10' + (hints.length ? '（' + hints.join('；') + '）' : ' 做得漂亮')});
+  quiz.hist.push(score >= 6);
+  const chips = quiz.hist.slice(-8).map(ok => '<i class="' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓' : '✗') + '</i>').join('');
+  const nPass = quiz.hist.filter(Boolean).length;
+  $('quizHist').innerHTML = '<b>记录 ' + nPass + '/' + quiz.hist.length + '</b>' + chips;
+  toast('本题得分 ' + score + '/10');
+}
+$('quizSubmit').onclick = submitQuiz;
+$('quizGo').onclick = newQuestion;
+$('quizSkip').onclick = newQuestion;
+$('quizInput').addEventListener('keydown', e=>{ if(e.key === 'Enter') submitQuiz(); });
+$('btnQuiz').onclick = ()=>{
+  const on = document.body.classList.toggle('quiz-on');
+  $('btnQuiz').textContent = on ? '退出练习' : '练习模式';
+  if(on && !quiz.cur) newQuestion();
+};
+
 const clock = new THREE.Clock();
 function loop(){
   const dt = Math.min(0.033, clock.getDelta());
@@ -1129,6 +1243,7 @@ if(_r !== null) VIEW.r = Math.max(5, Math.min(26, +_r));
 if(_x !== null) VIEW.target.x = Math.max(PAN.x[0], Math.min(PAN.x[1], +_x));
 if(_y !== null) VIEW.target.y = Math.max(PAN.y[0], Math.min(PAN.y[1], +_y));
 placeCamera(); syncCam();
+if(_q.get('quiz') === '1') $('btnQuiz').click();
 needleDeg = 55; needleGroup.rotation.z = 55 * D2R;
 loop();
 </script>

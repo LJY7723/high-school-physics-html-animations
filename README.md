@@ -6,7 +6,7 @@ A shared workspace for browser-based interactive animations developed with Codex
 
 | Project | Description | Entry point |
 | --- | --- | --- |
-| [multimeter](projects/multimeter/README.md) | Interactive 3D MF-47 analog multimeter teaching demo | [Open `index.html`](projects/multimeter/index.html) |
+| [multimeter](projects/multimeter/README.md) | Interactive 3D MF-47 analog multimeter teaching demo with guided steps and quiz mode | [Open `index.html`](projects/multimeter/index.html) |
 
 ## Open and verify
 
