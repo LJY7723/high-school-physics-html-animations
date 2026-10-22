@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>多用电表 · 3D 交互实验台</title>
+<style>
+:root{
+  --ink:#2a241e; --muted:#7d7264; --line:#ded4c2; --paper:rgba(255,252,245,.9);
+  --accent:#b0392c; --blue:#2b5f7e;
+  --zh:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#e9e3d7;font-family:var(--zh);color:var(--ink)}
+#scene{position:fixed;inset:0;display:block;touch-action:none}
+.hud{position:fixed;left:26px;top:20px;pointer-events:none;z-index:5}
+.hud h1{margin:0;font-size:17px;font-weight:600;letter-spacing:.04em}
+.hud p{margin:4px 0 0;font-size:12px;color:var(--muted);letter-spacing:.02em}
+.panel{position:fixed;top:78px;z-index:6;width:250px;padding:14px 14px 12px;border:1px solid var(--line);
+  border-radius:16px;background:var(--paper);backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(90,72,45,.10)}
+.panel.left{left:22px}
+.panel.right{right:22px;width:262px}
+.panel h2{margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.18em;color:var(--muted)}
+.panel section+section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.grid{display:flex;flex-wrap:wrap;gap:6px}
+.grid button{flex:1 1 auto;min-width:52px;padding:7px 6px;border:1px solid var(--line);border-radius:9px;
+  background:#fffdf8;color:#3b332b;font:500 12.5px/1 var(--zh);cursor:pointer;transition:background .16s,color .16s,border-color .16s}
+.grid button:hover{border-color:#b8a88c}
+.grid button.on{background:#2f2b26;border-color:#2f2b26;color:#f8f3e6}
+.grid button.ohm.on{background:#7a2f24;border-color:#7a2f24}
+.toggles{display:flex;flex-direction:column;gap:6px}
+.tg{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;border:1px solid var(--line);
+  border-radius:9px;background:#fffdf8;font-size:12.5px;cursor:pointer}
+.tg i{width:30px;height:16px;border-radius:9px;background:#d8cfbd;position:relative;transition:background .18s}
+.tg i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .18s}
+.tg.on i{background:#5d8a63}
+.tg.on i::after{left:16px}
+.ro{display:flex;flex-direction:column;gap:7px}
+.ro .line{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.ro .line b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.ro .big{margin-top:4px;padding:10px 12px;border-radius:11px;background:#2f2b26;color:#f7efdd;display:flex;align-items:baseline;gap:6px}
+.ro .big span{font:600 26px/1 var(--zh);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.ro .big em{font-style:normal;font-size:12px;opacity:.72}
+.status{margin-top:10px;padding:8px 10px;border-radius:9px;font-size:12px;line-height:1.5;
+  background:#eef3e9;color:#3f5c34;border:1px solid #d5e0cb}
+.status.warn{background:#fbf0dc;color:#8a5b12;border-color:#eedcb5}
+.status.bad{background:#fbe9e6;color:#a03225;border-color:#f0cfc9}
+.act{margin-top:10px;display:flex;gap:6px}
+.act button{flex:1;padding:8px 6px;border:1px solid var(--line);border-radius:9px;background:#fffdf8;
+  font:500 12.5px/1 var(--zh);color:#3b332b;cursor:pointer}
+.act button:hover{border-color:#b8a88c}
+.tools{position:fixed;right:22px;top:20px;z-index:6;display:flex;gap:8px}
+.tools button{padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--paper);
+  backdrop-filter:blur(8px);font:500 12px/1 var(--zh);color:#4a423a;cursor:pointer}
+.tools button:hover{border-color:#b8a88c}
+.panel.cam{right:22px;top:auto;bottom:22px;width:262px;padding:12px 14px 12px}
+.camrow{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-bottom:9px}
+.camrow span{width:24px;flex:none;letter-spacing:.04em}
+.camrow input{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
+  background:#ded4c2;outline:none;cursor:pointer}
+.camrow input::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:#b0392c;border:2px solid #fffdf8;box-shadow:0 1px 3px rgba(90,72,45,.35);cursor:pointer}
+.camrow input::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#b0392c;
+  border:2px solid #fffdf8;cursor:pointer}
+.camrow b{width:40px;text-align:right;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{flex:1 1 28%;padding:6px 4px;border:1px solid var(--line);border-radius:8px;
+  background:#fffdf8;font:500 11.5px/1 var(--zh);color:#3b332b;cursor:pointer;transition:.15s}
+.presets button:hover{border-color:#b8a88c}
+.presets button.on{background:#2f2b26;border-color:#2f2b26;color:#f8f3e6}
+.hint{position:fixed;left:26px;bottom:18px;z-index:5;font-size:12px;color:#8b8071;letter-spacing:.02em;pointer-events:none}
+.toast{position:fixed;left:50%;bottom:64px;transform:translate(-50%,14px);z-index:20;max-width:70vw;
+  padding:10px 18px;border-radius:11px;background:rgba(42,36,30,.92);color:#fdf6e7;font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:1180px){
+  .panel{width:212px;padding:12px}
+  .panel.right{width:224px}
+  .hud p{display:none}
+}
+@media (max-width:900px){
+  .panel.left{display:none}
+  .panel.right{width:188px;top:auto;bottom:16px;right:14px}
+}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="hud">
+  <h1>多用电表 · 3D 交互实验台</h1>
+  <p>MF-47 型指针式 ｜ 拖动旋转视角，滚轮缩放，点击旋钮换挡</p>
+</div>
+
+<div class="tools">
+  <button id="btnReset">复位视角</button>
+  <button id="btnFull">全屏</button>
+</div>
+
+<aside class="panel left">
+  <section>
+    <h2>量程 · 电压</h2>
+    <div class="grid" id="gV"></div>
+  </section>
+  <section>
+    <h2>量程 · 电流</h2>
+    <div class="grid" id="gA"></div>
+  </section>
+  <section>
+    <h2>量程 · 电阻</h2>
+    <div class="grid" id="gR"></div>
+  </section>
+  <section>
+    <h2>被测对象</h2>
+    <div class="grid" id="gT"></div>
+  </section>
+  <section>
+    <h2>表笔状态</h2>
+    <div class="toggles">
+      <div class="tg on" id="tgRed"><span>红表笔已插入 ＋</span><i></i></div>
+      <div class="tg on" id="tgBlack"><span>黑表笔已插入 COM</span><i></i></div>
+      <div class="tg" id="tgShort"><span>两支表笔短接</span><i></i></div>
+    </div>
+  </section>
+</aside>
+
+<aside class="panel right">
+  <h2>读数</h2>
+  <div class="ro">
+    <div class="line"><span>挡位</span><b id="roRange">—</b></div>
+    <div class="line"><span>指针所指刻度</span><b id="roScale">—</b></div>
+    <div class="line"><span>换算</span><b id="roCalc">—</b></div>
+    <div class="big"><span id="roValue">—</span><em id="roUnit"></em></div>
+  </div>
+  <div class="status" id="roStatus">请选择量程</div>
+  <div class="act">
+    <button id="btnOhm">欧姆调零</button>
+    <button id="btnMech">机械调零</button>
+  </div>
+</aside>
+
+<aside class="panel cam" id="camPanel">
+  <h2>视角调节</h2>
+  <div class="camrow"><span>水平</span><input id="sTheta" type="range" min="-55" max="55" step="1" value="0"><b id="vTheta">0°</b></div>
+  <div class="camrow"><span>俯仰</span><input id="sPhi" type="range" min="-4" max="55" step="1" value="23"><b id="vPhi">23°</b></div>
+  <div class="camrow"><span>距离</span><input id="sR" type="range" min="5" max="26" step="0.1" value="11.6"><b id="vR">11.6</b></div>
+  <div class="camrow"><span>左右</span><input id="sPanX" type="range" min="-6" max="6" step="0.1" value="0"><b id="vPanX">0.0</b></div>
+  <div class="camrow"><span>高低</span><input id="sPanY" type="range" min="-3" max="4" step="0.1" value="-0.2"><b id="vPanY">-0.2</b></div>
+  <div class="presets">
+    <button data-p="front">正视</button>
+    <button data-p="top">俯视</button>
+    <button data-p="left">左前</button>
+    <button data-p="right">右前</button>
+    <button data-p="dial">看表盘</button>
+  </div>
+</aside>
+
+<div class="hint">拖动＝旋转 ｜ Shift+拖动 或 右键拖动＝平移机位 ｜ 滚轮＝缩放 ｜ 右下角可精确调节</div>
+<div class="toast" id="toast"></div>
+
+<script src="../vendor/three.min.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+
+/* ---------- 量程与被测对象定义 ---------- */
+const RANGES = [
+  {label:'2.5V',  kind:'V', max:2.5, smax:250, div:100},
+  {label:'10V',   kind:'V', max:10,  smax:50,  div:5},
+  {label:'50V',   kind:'V', max:50,  smax:50,  div:1},
+  {label:'250V',  kind:'V', max:250, smax:250, div:1},
+  {label:'500V',  kind:'V', max:500, smax:250, div:2},
+  {label:'5mA',   kind:'A', max:5,   smax:50,  div:10},
+  {label:'50mA',  kind:'A', max:50,  smax:50,  div:1},
+  {label:'500mA', kind:'A', max:500, smax:50,  div:10},
+  {label:'×1',    kind:'R', mult:1},
+  {label:'×10',   kind:'R', mult:10},
+  {label:'×100',  kind:'R', mult:100},
+  {label:'×1k',   kind:'R', mult:1000}
+];
+const TARGETS = {
+  batt:  {name:'干电池 1.5V', kind:'dc', v:1.5, sub:'1.5 V'},
+  res:   {name:'电阻 1.2kΩ', kind:'R', r:1200, sub:'1.2 kΩ'},
+  diodeF:{name:'二极管 正接', kind:'diode', r:420, sub:'正向导通'},
+  diodeR:{name:'二极管 反接', kind:'diode', r:900000, sub:'反向截止'},
+  ac:    {name:'交流 220V', kind:'ac', v:220, sub:'~ 220 V'},
+  open:  {name:'断路导线', kind:'open', sub:'断开'}
+};
+
+const state = {
+  range: 0,            // 默认 2.5V
+  target: 'batt',
+  plugged: {red:true, black:true},
+  shorted: false,
+  ohmZero: false,      // 当前电阻挡是否已调零
+  mechOffset: 2.6      // 机械零位偏差（度，正=偏左）
+};
+
+/* ---------- 面板贴图 ---------- */
+const PW = 1024, PH = 1340;
+const PANEL_W = 2.46, PANEL_H = 3.22;
+const S = PW / PANEL_W;               // 416 px / 单位
+const PX = x => (x + PANEL_W/2) * S;
+const PY = y => (PANEL_H/2 - y) * S;
+
+const DIAL = {cx:0, cy:0.50, R:0.92};
+const CX = PX(DIAL.cx), CY = PY(DIAL.cy), RAD = DIAL.R * S;
+const A0 = 55, SWEEP = 110;
+const angOf = f => A0 - SWEEP * f;
+function polar(cx, cy, r, deg){
+  const t = deg * D2R;
+  return [cx - r*Math.sin(t), cy - r*Math.cos(t)];
+}
+function roundRect(g, x, y, w, h, r){
+  g.beginPath();
+  g.moveTo(x+r, y); g.lineTo(x+w-r, y); g.quadraticCurveTo(x+w, y, x+w, y+r);
+  g.lineTo(x+w, y+h-r); g.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  g.lineTo(x+r, y+h); g.quadraticCurveTo(x, y+h, x, y+h-r);
+  g.lineTo(x, y+r); g.quadraticCurveTo(x, y, x+r, y); g.closePath();
+}
+function tick(g, ang, rOut, len, w, color){
+  const [x1,y1] = polar(CX, CY, rOut, ang);
+  const [x2,y2] = polar(CX, CY, rOut-len, ang);
+  g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2);
+  g.lineWidth = w; g.strokeStyle = color; g.stroke();
+}
+function scaleText(g, ang, r, txt, size, color){
+  const [x,y] = polar(CX, CY, r, ang);
+  g.save(); g.translate(x,y); g.rotate(-ang*D2R);
+  g.fillStyle = color; g.font = '500 '+size+'px "Microsoft YaHei",sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText(txt, 0, 0); g.restore();
+}
+
+function drawPanel(){
+  const cv = document.createElement('canvas');
+  cv.width = PW; cv.height = PH;
+  const g = cv.getContext('2d');
+
+  // 机壳
+  const shell = g.createLinearGradient(0,0,PW,PH);
+  shell.addColorStop(0,'#3b352e'); shell.addColorStop(.5,'#2d2822'); shell.addColorStop(1,'#37312a');
+  g.fillStyle = shell; g.fillRect(0,0,PW,PH);
+
+  // 面板
+  roundRect(g, 22, 22, PW-44, PH-44, 20);
+  const face = g.createLinearGradient(0,22,0,PH-22);
+  face.addColorStop(0,'#f3ebd9'); face.addColorStop(1,'#e6dcc6');
+  g.fillStyle = face; g.fill();
+  g.strokeStyle = '#c6b99e'; g.lineWidth = 3; g.stroke();
+
+  // 品牌
+  g.fillStyle = '#4b4237'; g.textAlign='center'; g.textBaseline='middle';
+  g.font = '600 27px "Microsoft YaHei",sans-serif';
+  g.fillText('MF-47', PX(0), PY(1.50));
+  g.font = '400 18px "Microsoft YaHei",sans-serif';
+  g.fillStyle = '#6b5f4e';
+  g.fillText('指针式多用电表', PX(0), PY(1.36));
+
+  // 表盘
+  g.save();
+  g.beginPath(); g.arc(CX, CY, RAD+26, 0, Math.PI*2);
+  g.fillStyle = '#fdfaf1'; g.fill();
+  g.lineWidth = 5; g.strokeStyle = '#26221c'; g.stroke();
+  g.beginPath(); g.arc(CX, CY, RAD+8, 0, Math.PI*2);
+  g.lineWidth = 1.5; g.strokeStyle = '#b9ae95'; g.stroke();
+
+  // 反光镜弧带
+  g.beginPath();
+  g.arc(CX, CY, RAD-8, (-A0-4)*D2R, (A0+4)*D2R, false);
+  g.arc(CX, CY, RAD-40, (A0+4)*D2R, (-A0-4)*D2R, true);
+  g.closePath(); g.fillStyle = 'rgba(150,160,150,.22)'; g.fill();
+
+  // 电阻挡刻度（最外）
+  const ohmTicks = [0,1,2,3,5,7,10,15,20,30,50,100,200,500,Infinity];
+  const ohmLabels = new Set([0,1,5,10,15,20,30,50,100,Infinity]);
+  ohmTicks.forEach(v=>{
+    const f = v===Infinity ? 0 : 15/(15+v);
+    const ang = angOf(f);
+    const major = ohmLabels.has(v);
+    tick(g, ang, RAD-14, major?20:10, major?3.2:1.6, '#26221c');
+    if(major){
+      const txt = v===Infinity ? '∞' : String(v);
+      scaleText(g, ang, RAD-50, txt, 20, '#26221c');
+    }
+  });
+  scaleText(g, angOf(0)+3.2, RAD-96, 'Ω', 36, '#8a2f22');
+
+  // 0—250 刻度
+  for(let v=0; v<=250; v+=10){
+    const ang = angOf(v/250);
+    const major = v % 50 === 0;
+    tick(g, ang, RAD-72, major?22:11, major?3:1.5, '#26221c');
+    if(major) scaleText(g, ang, RAD-104, String(v), 25, '#26221c');
+  }
+  // 0—50 刻度
+  for(let v=0; v<=50; v+=1){
+    const ang = angOf(v/50);
+    const major = v % 5 === 0;
+    tick(g, ang, RAD-136, major?20:9, major?2.6:1.3, '#26221c');
+    if(major) scaleText(g, ang, RAD-166, String(v), 25, '#26221c');
+  }
+
+  // 表盘文字
+  g.fillStyle = '#8a7f6b'; g.font = '400 17px "Microsoft YaHei",sans-serif';
+  g.textAlign='center';
+  g.fillText('DC  V·mA', CX, CY - RAD*0.30);
+  g.fillText('Ω', CX, CY - RAD*0.16);
+
+  // 机械调零螺钉
+  const mx = PX(1.12), my = PY(1.10);
+  g.beginPath(); g.arc(mx, my, 26, 0, Math.PI*2);
+  g.fillStyle = '#2b2621'; g.fill();
+  g.strokeStyle = '#8b8172'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(mx-13, my-9); g.lineTo(mx+13, my+9); g.stroke();
+  g.fillStyle = '#6b5f4e'; g.font = '400 15px "Microsoft YaHei",sans-serif';
+  g.textAlign='left';
+  g.fillText('机械调零', mx-96, my+5);
+
+  // 量程旋钮底座
+  const kx = PX(-0.52), ky = PY(-0.98);
+  g.beginPath(); g.arc(kx, ky, 0.40*S+10, 0, Math.PI*2);
+  g.fillStyle = '#cfc3aa'; g.fill();
+  g.beginPath(); g.arc(kx, ky, 0.40*S, 0, Math.PI*2);
+  g.fillStyle = '#2b2724'; g.fill();
+
+  // 旋钮 12 个挡位标记
+  const N = RANGES.length, step = 300/(N-1);
+  RANGES.forEach((r,i)=>{
+    const deg = -150 + i*step;
+    const t = deg*D2R;
+    const x1 = kx - 0.44*S*Math.sin(t), y1 = ky - 0.44*S*Math.cos(t);
+    const x2 = kx - 0.51*S*Math.sin(t), y2 = ky - 0.51*S*Math.cos(t);
+    g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.lineWidth = 3; g.strokeStyle='#8d8069'; g.stroke();
+    const lx = kx - 0.63*S*Math.sin(t), ly = ky - 0.63*S*Math.cos(t);
+    g.save(); g.translate(lx,ly);
+    g.fillStyle = r.kind==='R' ? '#7a2f24' : '#3a332b';
+    g.font = '600 24px "Microsoft YaHei",sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(r.label, 0, 0); g.restore();
+  });
+
+  // 欧姆调零旋钮
+  const ox = PX(0.52), oy = PY(-0.72);
+  g.beginPath(); g.arc(ox, oy, 0.20*S, 0, Math.PI*2);
+  g.fillStyle = '#cfc3aa'; g.fill();
+  g.beginPath(); g.arc(ox, oy, 0.18*S, 0, Math.PI*2);
+  g.fillStyle = '#2b2724'; g.fill();
+  g.beginPath(); g.arc(ox, oy, 0.18*S*0.42, 0, Math.PI*2);
+  g.fillStyle = '#4a433a'; g.fill();
+  g.fillStyle = '#7a2f24'; g.font='600 17px "Microsoft YaHei",sans-serif'; g.textAlign='center';
+  g.fillText('Ω 调零', ox, oy + 0.30*S);
+
+  // 表笔插孔
+  function jack(x, color, label){
+    const jx = PX(x), jy = PY(-1.30);
+    g.beginPath(); g.arc(jx, jy, 40, 0, Math.PI*2);
+    g.fillStyle = '#d9cdb4'; g.fill();
+    g.beginPath(); g.arc(jx, jy, 33, 0, Math.PI*2);
+    g.fillStyle = color; g.fill();
+    g.beginPath(); g.arc(jx, jy, 17, 0, Math.PI*2);
+    g.fillStyle = '#17140f'; g.fill();
+    g.fillStyle = color; g.font='700 22px "Microsoft YaHei",sans-serif'; g.textAlign='center';
+    g.fillText(label, jx, jy + 58);
+  }
+  jack(0.90, '#a8321f', '＋');
+  jack(0.52, '#2b2b2b', 'COM');
+
+  return cv;
+}
+
+/* ---------- Three.js 场景 ---------- */
+const canvas = $('scene');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe7e1d4);
+
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 120);
+const VIEW = {target:new THREE.Vector3(0, -0.20, 0.48), theta:0, phi:1.17, r:11.6};
+const HOME = {...VIEW, target:VIEW.target.clone()};
+function placeCamera(){
+  const {theta, phi, r} = VIEW;
+  camera.position.set(
+    VIEW.target.x + r*Math.sin(phi)*Math.sin(theta),
+    VIEW.target.y + r*Math.cos(phi),
+    VIEW.target.z + r*Math.sin(phi)*Math.cos(theta)
+  );
+  camera.lookAt(VIEW.target);
+}
+
+/* ---------- 视角调节：滑块 + 预设机位 + 缓动 ---------- */
+const PRESETS = {
+  front:{theta:0,   elev:8,  r:11.6, tx:0, ty:-0.20, tz:0.48},
+  top:  {theta:0,   elev:48, r:11.6, tx:0, ty:-0.20, tz:0.48},
+  left: {theta:-42, elev:20, r:11.6, tx:0, ty:-0.20, tz:0.48},
+  right:{theta:42,  elev:20, r:11.6, tx:0, ty:-0.20, tz:0.48},
+  dial: {theta:0,   elev:14, r:6.4,  tx:0, ty:0.30,  tz:0.30}
+};
+const PAN = {x:[-6, 6], y:[-3, 4]};
+let camTween = null;
+const sTheta = $('sTheta'), sPhi = $('sPhi'), sR = $('sR'), sPX = $('sPanX'), sPY = $('sPanY');
+const clampV = (v, a, b)=> Math.max(a, Math.min(b, v));
+function syncCam(){
+  const th = VIEW.theta * R2D, ev = 90 - VIEW.phi * R2D;
+  sTheta.value = Math.round(th);
+  sPhi.value = Math.round(ev);
+  sR.value = VIEW.r.toFixed(1);
+  sPX.value = VIEW.target.x.toFixed(1);
+  sPY.value = VIEW.target.y.toFixed(1);
+  $('vTheta').textContent = Math.round(th) + '°';
+  $('vPhi').textContent = Math.round(ev) + '°';
+  $('vR').textContent = VIEW.r.toFixed(1);
+  $('vPanX').textContent = VIEW.target.x.toFixed(1);
+  $('vPanY').textContent = VIEW.target.y.toFixed(1);
+}
+function applyCam(){
+  camTween = null;
+  VIEW.theta = clampV((+sTheta.value) * D2R, -1, 1);
+  VIEW.phi = clampV((90 - (+sPhi.value)) * D2R, 0.55, 1.62);
+  VIEW.r = +sR.value;
+  VIEW.target.x = clampV(+sPX.value, PAN.x[0], PAN.x[1]);
+  VIEW.target.y = clampV(+sPY.value, PAN.y[0], PAN.y[1]);
+  placeCamera();
+  syncCam();
+  document.querySelectorAll('.presets button').forEach(b=>b.classList.remove('on'));
+}
+[sTheta, sPhi, sR, sPX, sPY].forEach(el=>el.addEventListener('input', applyCam));
+// 屏幕拖动 → 机位平移（沿相机自身右/上方向）
+const _right = new THREE.Vector3(), _up = new THREE.Vector3();
+function panView(dxPx, dyPx){
+  const h = 2 * Math.tan(camera.fov * D2R / 2) * VIEW.r;
+  const w = h * camera.aspect;
+  _right.set(1, 0, 0).applyQuaternion(camera.quaternion);
+  _up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+  VIEW.target.addScaledVector(_right, -dxPx / window.innerWidth * w);
+  VIEW.target.addScaledVector(_up, dyPx / window.innerHeight * h);
+  VIEW.target.x = clampV(VIEW.target.x, PAN.x[0], PAN.x[1]);
+  VIEW.target.y = clampV(VIEW.target.y, PAN.y[0], PAN.y[1]);
+  placeCamera();
+  syncCam();
+}
+function flyTo(key){
+  const p = PRESETS[key];
+  camTween = {t:0, dur:0.7,
+    from:{theta:VIEW.theta, phi:VIEW.phi, r:VIEW.r,
+          tx:VIEW.target.x, ty:VIEW.target.y, tz:VIEW.target.z},
+    to:{theta:p.theta*D2R, phi:(90-p.elev)*D2R, r:p.r,
+        tx:p.tx, ty:p.ty, tz:p.tz}};
+  document.querySelectorAll('.presets button').forEach(b=>b.classList.toggle('on', b.dataset.p === key));
+}
+document.querySelectorAll('.presets button').forEach(b=>{
+  b.onclick = ()=> flyTo(b.dataset.p);
+});
+
+scene.add(new THREE.HemisphereLight(0xfffdf5, 0xc2b49b, 0.78));
+const keyLight = new THREE.DirectionalLight(0xfff4e2, 1.05);
+keyLight.position.set(4.5, 7, 6.5);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.left = -6; keyLight.shadow.camera.right = 6;
+keyLight.shadow.camera.top = 6; keyLight.shadow.camera.bottom = -6;
+keyLight.shadow.camera.near = 0.5; keyLight.shadow.camera.far = 30;
+keyLight.shadow.bias = -0.0006;
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xdfeaff, 0.42);
+fillLight.position.set(-6.5, 3.5, 4.5); scene.add(fillLight);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.30);
+rimLight.position.set(-1, 2.5, -7); scene.add(rimLight);
+
+// 工作台
+const benchMat = new THREE.MeshStandardMaterial({color:0xd6ccb8, roughness:0.96, metalness:0});
+const bench = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), benchMat);
+bench.rotation.x = -Math.PI/2; bench.position.y = -1.70;
+bench.receiveShadow = true; scene.add(bench);
+
+// 圆角机身
+function roundedBox(w, h, d, r){
+  const sh = new THREE.Shape();
+  const x = -w/2 + r, y = -h/2 + r, W = w - 2*r, H = h - 2*r;
+  sh.moveTo(x, -h/2);
+  sh.lineTo(x + W, -h/2);
+  sh.quadraticCurveTo(w/2, -h/2, w/2, y);
+  sh.lineTo(w/2, y + H);
+  sh.quadraticCurveTo(w/2, h/2, x + W, h/2);
+  sh.lineTo(x, h/2);
+  sh.quadraticCurveTo(-w/2, h/2, -w/2, y + H);
+  sh.lineTo(-w/2, y);
+  sh.quadraticCurveTo(-w/2, -h/2, x, -h/2);
+  const b = 0.035;
+  const geo = new THREE.ExtrudeGeometry(sh, {depth: d - 2*b, bevelEnabled:true,
+    bevelThickness:b, bevelSize:b, bevelSegments:4, curveSegments:18});
+  geo.translate(0, 0, -(d/2 - b));
+  return geo;
+}
+
+const meter = new THREE.Group(); scene.add(meter);
+const bodyGeo = roundedBox(2.60, 3.40, 0.72, 0.14);
+const body = new THREE.Mesh(bodyGeo, new THREE.MeshStandardMaterial({color:0x322d27, roughness:0.62, metalness:0.18}));
+body.castShadow = true; body.receiveShadow = true; meter.add(body);
+
+// 面板
+const panelCanvas = drawPanel();
+const panelTex = new THREE.CanvasTexture(panelCanvas);
+panelTex.encoding = THREE.sRGBEncoding;
+panelTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+const panel = new THREE.Mesh(
+  new THREE.PlaneGeometry(PANEL_W, PANEL_H),
+  new THREE.MeshStandardMaterial({map:panelTex, roughness:0.78, metalness:0.02})
+);
+panel.position.z = 0.361;
+meter.add(panel);
+
+// 玻璃罩 + 反光
+const glassCanvas = (()=>{
+  const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+  const g = c.getContext('2d');
+  g.clearRect(0,0,512,512);
+  const gr = g.createLinearGradient(0,0,512,512);
+  gr.addColorStop(0,'rgba(255,255,255,.55)');
+  gr.addColorStop(.16,'rgba(255,255,255,.06)');
+  gr.addColorStop(.42,'rgba(255,255,255,0)');
+  gr.addColorStop(.62,'rgba(255,255,255,.22)');
+  gr.addColorStop(.70,'rgba(255,255,255,0)');
+  gr.addColorStop(1,'rgba(255,255,255,.10)');
+  g.fillStyle = gr; g.fillRect(0,0,512,512);
+  return c;
+})();
+const glassTex = new THREE.CanvasTexture(glassCanvas);
+glassTex.encoding = THREE.sRGBEncoding;
+const glass = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.02, 1.92),
+  new THREE.MeshBasicMaterial({map:glassTex, transparent:true, opacity:0.5, depthWrite:false})
+);
+glass.position.set(0, 0.50, 0.405);
+meter.add(glass);
+
+// 指针
+const needleGroup = new THREE.Group();
+needleGroup.position.set(0, 0.50, 0.368);
+meter.add(needleGroup);
+const needleMat = new THREE.MeshStandardMaterial({color:0x8e2318, roughness:0.45, metalness:0.25});
+const needle = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.88, 0.008), needleMat);
+needle.position.y = 0.44; needle.castShadow = false;
+needleGroup.add(needle);
+const tail = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.10, 0.008), needleMat);
+tail.position.y = -0.05; needleGroup.add(tail);
+const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.02, 24),
+  new THREE.MeshStandardMaterial({color:0x1b1815, roughness:0.5, metalness:0.4}));
+cap.rotation.x = Math.PI/2; cap.position.z = 0.004; needleGroup.add(cap);
+
+// 量程旋钮
+const knobGroup = new THREE.Group();
+knobGroup.position.set(-0.52, -0.98, 0.361);
+meter.add(knobGroup);
+const knobMat = new THREE.MeshStandardMaterial({color:0x22201d, roughness:0.55, metalness:0.2});
+const knobBody = new THREE.Mesh(new THREE.CylinderGeometry(0.40, 0.43, 0.13, 64), knobMat);
+knobBody.rotation.x = Math.PI/2; knobBody.position.z = 0.065; knobBody.castShadow = true;
+knobGroup.add(knobBody);
+const knobRing = new THREE.Mesh(new THREE.TorusGeometry(0.405, 0.022, 10, 64),
+  new THREE.MeshStandardMaterial({color:0x3a3630, roughness:0.4, metalness:0.45}));
+knobRing.position.z = 0.128; knobGroup.add(knobRing);
+const markMat = new THREE.MeshStandardMaterial({color:0xe8dcc2, roughness:0.5});
+const knobMark = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.22, 0.014), markMat);
+knobMark.position.set(0, 0.26, 0.132); knobGroup.add(knobMark);
+const knobDot = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 20), markMat);
+knobDot.rotation.x = Math.PI/2; knobDot.position.z = 0.132; knobGroup.add(knobDot);
+
+// 欧姆调零旋钮
+const ohmKnob = new THREE.Group();
+ohmKnob.position.set(0.52, -0.72, 0.361); meter.add(ohmKnob);
+const ohmBody = new THREE.Mesh(new THREE.CylinderGeometry(0.145, 0.16, 0.10, 40),
+  new THREE.MeshStandardMaterial({color:0x2a2622, roughness:0.55, metalness:0.2}));
+ohmBody.rotation.x = Math.PI/2; ohmBody.position.z = 0.05; ohmBody.castShadow = true;
+ohmKnob.add(ohmBody);
+const ohmSlot = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.022, 0.012),
+  new THREE.MeshStandardMaterial({color:0xd9c9a8, roughness:0.6}));
+ohmSlot.position.z = 0.101; ohmKnob.add(ohmSlot);
+
+// 机械调零螺钉
+const mechScrew = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.062, 0.03, 24),
+  new THREE.MeshStandardMaterial({color:0x1e1b18, roughness:0.6, metalness:0.3}));
+mechScrew.rotation.x = Math.PI/2;
+mechScrew.position.set(1.12, 1.10, 0.372);
+meter.add(mechScrew);
+
+// 表笔插孔
+function makeJack(x, color){
+  const grp = new THREE.Group();
+  grp.position.set(x, -1.30, 0.361);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.072, 0.021, 12, 32),
+    new THREE.MeshStandardMaterial({color, roughness:0.45, metalness:0.35}));
+  ring.position.z = 0.02; grp.add(ring);
+  const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.058, 0.055, 24),
+    new THREE.MeshStandardMaterial({color:0x0e0c0a, roughness:0.9}));
+  hole.rotation.x = Math.PI/2; hole.position.z = 0.012; grp.add(hole);
+  meter.add(grp);
+  return grp;
+}
+const jackRed = makeJack(0.90, 0xa8321f);
+const jackBlack = makeJack(0.52, 0x1c1c1c);
+
+/* ---------- 被测元件卡片 ---------- */
+const cardCanvas = document.createElement('canvas');
+cardCanvas.width = 512; cardCanvas.height = 330;
+const cardTex = new THREE.CanvasTexture(cardCanvas);
+cardTex.encoding = THREE.sRGBEncoding;
+const card = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.3, 1.48),
+  new THREE.MeshStandardMaterial({map:cardTex, roughness:0.9, metalness:0})
+);
+card.rotation.x = -Math.PI/2;
+card.position.set(0, -1.682, 1.50);
+card.receiveShadow = true;
+scene.add(card);
+
+function drawCard(){
+  const g = cardCanvas.getContext('2d');
+  const t = TARGETS[state.target];
+  g.clearRect(0,0,512,330);
+  g.fillStyle = '#f7f1e1'; g.fillRect(0,0,512,330);
+  g.strokeStyle = '#cbbda2'; g.lineWidth = 4; g.strokeRect(6,6,500,318);
+  g.fillStyle = '#5e5346'; g.font = '500 20px "Microsoft YaHei",sans-serif';
+  g.textAlign = 'left'; g.fillText('被测元件', 26, 40);
+
+  g.strokeStyle = '#2d2823'; g.fillStyle = '#2d2823'; g.lineWidth = 4;
+  const cy = 175, L = 100, Rr = 412;
+  g.beginPath(); g.moveTo(L, cy); g.lineTo(196, cy); g.stroke();
+  g.beginPath(); g.moveTo(316, cy); g.lineTo(Rr, cy); g.stroke();
+
+  if(t.kind === 'dc'){
+    g.lineWidth = 6;
+    g.beginPath(); g.moveTo(216, cy-46); g.lineTo(216, cy+46); g.stroke();
+    g.lineWidth = 3;
+    g.beginPath(); g.moveTo(248, cy-24); g.lineTo(248, cy+24); g.stroke();
+    g.lineWidth = 6;
+    g.beginPath(); g.moveTo(276, cy-46); g.lineTo(276, cy+46); g.stroke();
+    g.lineWidth = 3;
+    g.beginPath(); g.moveTo(308, cy-24); g.lineTo(308, cy+24); g.stroke();
+    g.fillStyle = '#a8321f'; g.font = '700 26px "Microsoft YaHei",sans-serif';
+    g.fillText('＋', 200, cy-62);
+    g.fillStyle = '#2d2823'; g.fillText('－', 300, cy-62);
+  } else if(t.kind === 'R'){
+    g.lineWidth = 5; g.strokeRect(204, cy-34, 104, 68);
+    g.fillStyle = '#2d2823'; g.font = '600 22px "Microsoft YaHei",sans-serif';
+    g.textAlign = 'center'; g.fillText(t.sub, 256, cy+82);
+  } else if(t.kind === 'diode'){
+    g.beginPath(); g.moveTo(220, cy-38); g.lineTo(220, cy+38); g.lineTo(288, cy); g.closePath(); g.fill();
+    g.lineWidth = 6; g.beginPath(); g.moveTo(288, cy-38); g.lineTo(288, cy+38); g.stroke();
+    g.fillStyle = '#2d2823'; g.font = '600 22px "Microsoft YaHei",sans-serif';
+    g.textAlign = 'center'; g.fillText(t.sub, 256, cy+82);
+  } else if(t.kind === 'ac'){
+    g.lineWidth = 5; g.beginPath();
+    for(let i=0;i<=90;i++){
+      const x = 198 + i*1.3, y = cy - Math.sin(i/90*Math.PI*2)*38;
+      i ? g.lineTo(x,y) : g.moveTo(x,y);
+    }
+    g.stroke();
+    g.fillStyle = '#2d2823'; g.font = '600 22px "Microsoft YaHei",sans-serif';
+    g.textAlign = 'center'; g.fillText(t.sub, 256, cy+82);
+  } else {
+    g.setLineDash([12,12]); g.lineWidth = 5;
+    g.beginPath(); g.moveTo(236, cy); g.lineTo(292, cy); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#a8321f'; g.font = '600 22px "Microsoft YaHei",sans-serif';
+    g.textAlign='center'; g.fillText('断路', 256, cy+82);
+  }
+
+  // 触点
+  [[135,121],[391,377]].forEach(([x1,x2])=>{
+    g.beginPath(); g.arc(x1, cy, 9, 0, Math.PI*2); g.fillStyle = '#8c7f6a'; g.fill();
+    g.beginPath(); g.arc(x2, cy, 9, 0, Math.PI*2); g.fillStyle = '#8c7f6a'; g.fill();
+  });
+  cardTex.needsUpdate = true;
+}
+
+/* ---------- 表笔与导线 ---------- */
+function makeProbe(color, tipPos, backPos){
+  const grp = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color, roughness:0.5, metalness:0.15});
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.017, 0.15, 12),
+    new THREE.MeshStandardMaterial({color:0xb9b2a4, roughness:0.3, metalness:0.85}));
+  tip.position.y = 0.075; tip.rotation.x = Math.PI; grp.add(tip);
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.13, 10),
+    new THREE.MeshStandardMaterial({color:0xc9c2b4, roughness:0.3, metalness:0.8}));
+  shaft.position.y = 0.215; grp.add(shaft);
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.032, 0.32, 18), mat);
+  handle.position.y = 0.44; handle.castShadow = true; grp.add(handle);
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.012, 18), mat);
+  ring.position.y = 0.60; grp.add(ring);
+
+  grp.position.copy(tipPos);
+  const dir = backPos.clone().sub(tipPos).normalize();
+  grp.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+  scene.add(grp);
+  return grp;
+}
+function makeWire(color, pts){
+  const curve = new THREE.CatmullRomCurve3(pts.map(p=>p.clone()));
+  const geo = new THREE.TubeGeometry(curve, 64, 0.019, 10, false);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color, roughness:0.65, metalness:0.05}));
+  mesh.castShadow = true;
+  [pts[0], pts[pts.length-1]].forEach(p=>{
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.019, 10, 8), mesh.material);
+    cap.position.copy(p);
+    cap.castShadow = true;
+    mesh.add(cap);
+  });
+  scene.add(mesh);
+  return mesh;
+}
+
+const probeRed = makeProbe(0xa8321f, new THREE.Vector3(0.61, -1.585, 1.55), new THREE.Vector3(0.86, -1.26, 2.06));
+const probeBlack = makeProbe(0x1c1c1c, new THREE.Vector3(-0.61, -1.585, 1.55), new THREE.Vector3(-0.36, -1.26, 2.06));
+const wireRed = makeWire(0xa8321f, [
+  new THREE.Vector3(0.90, -1.24, 0.40),
+  new THREE.Vector3(1.38, -1.66, 0.95),
+  new THREE.Vector3(1.34, -1.665, 1.85),
+  new THREE.Vector3(0.86, -1.25, 2.06)
+]);
+const wireBlack = makeWire(0x1c1c1c, [
+  new THREE.Vector3(0.52, -1.24, 0.40),
+  new THREE.Vector3(0.30, -1.66, 0.52),
+  new THREE.Vector3(-1.40, -1.665, 1.35),
+  new THREE.Vector3(-1.32, -1.665, 2.00),
+  new THREE.Vector3(-0.36, -1.25, 2.06)
+]);
+
+/* ---------- 指针与读数 ---------- */
+let needleDeg = 55;      // 当前指针角度（度，正=偏左）
+let needleVel = 0;
+let targetDeg = 55;
+let liveF = 0;           // 由真实指针位置反算的偏转比例
+
+function computeTarget(){
+  const r = RANGES[state.range];
+  const t = TARGETS[state.target];
+  let f = 0, warn = null, hint = '';
+
+  if(!state.plugged.red || !state.plugged.black){
+    return {f:0, warn:'表笔未插好，回路没有接通', hint:'把红、黑表笔插进 ＋ 与 COM 插孔'};
+  }
+  if(state.shorted){
+    f = (r.kind === 'R') ? 1 : 0;
+    hint = (r.kind === 'R') ? '表笔短接：指针满偏到 0 Ω 端' : '表笔短接：没有电压电流，指针不动';
+    return {f, warn:null, hint};
+  }
+
+  if(r.kind === 'V'){
+    if(t.kind === 'dc'){
+      f = t.v / r.max;
+      if(f > 1.02){ warn = '超量程：指针打到满偏，换更大的电压挡'; f = 1.06; }
+    } else if(t.kind === 'ac'){
+      f = 0; hint = '直流电压挡测交流：指针基本不动，读数约为 0';
+    } else if(t.kind === 'open'){
+      hint = '断路，没有电压';
+    } else {
+      hint = '测电阻要用电阻挡，电压挡读数为 0';
+    }
+  } else if(r.kind === 'A'){
+    if(t.kind === 'dc'){
+      f = 1.06; warn = '危险：电流挡直接接电源，表头严重过载（实物会烧保险丝）';
+    } else if(t.kind === 'ac'){
+      f = 0; hint = '直流电流挡测交流，指针不动';
+    } else {
+      hint = '电流挡应串联在电路中，此处读数为 0';
+    }
+  } else {
+    if(t.kind === 'R' || t.kind === 'diode'){
+      const Ri = 15 * r.mult;
+      f = Ri / (Ri + t.r);
+      if(!state.ohmZero) f = f * 0.86 + 0.05;
+    } else if(t.kind === 'open'){
+      f = state.ohmZero ? 0 : 0.05;
+      hint = '断路：指针停在 ∞ 端不动';
+    } else if(t.kind === 'dc' || t.kind === 'ac'){
+      f = 1.06; warn = '禁止带电测电阻：指针满偏，还可能损坏表头';
+    }
+  }
+  return {f: Math.max(0, Math.min(1.06, f)), warn, hint};
+}
+
+function updateNeedle(dt){
+  targetDeg = angOf(Math.min(1.06, Math.max(-0.02, computeTarget().f))) + state.mechOffset;
+  const k = 95, c = 8.4;
+  for(let i=0;i<3;i++){
+    const h = dt/3;
+    const acc = k*(targetDeg - needleDeg) - c*needleVel;
+    needleVel += acc*h;
+    needleDeg += needleVel*h;
+  }
+  needleGroup.rotation.z = needleDeg * D2R;
+  liveF = (A0 - needleDeg) / SWEEP;
+}
+
+function fmt(v, d){
+  if(!isFinite(v)) return '∞';
+  return v.toFixed(d);
+}
+
+let lastRO = '';
+function updateReadout(){
+  const r = RANGES[state.range];
+  const res = computeTarget();
+  const f = Math.max(0, Math.min(1, liveF));
+  $('roRange').textContent = (r.kind==='V'?'直流电压 ':r.kind==='A'?'直流电流 ':'电阻 ') + r.label;
+
+  let scaleTxt, calcTxt, valueTxt, unitTxt;
+  if(r.kind === 'R'){
+    const s = f < 0.006 ? Infinity : 15*(1-f)/f;
+    scaleTxt = (s===Infinity ? '∞' : fmt(s,1)) + ' Ω（0–15 中心刻度）';
+    if(s === Infinity){ valueTxt = '∞'; unitTxt = 'Ω'; calcTxt = '指针在 ∞ 端'; }
+    else { valueTxt = fmt(s*r.mult, s*r.mult>=100?0:1); unitTxt = 'Ω'; calcTxt = fmt(s,1)+' × '+r.mult; }
+  } else {
+    const s = f * r.smax;
+    scaleTxt = fmt(s,1) + '（0–' + r.smax + ' 线）';
+    valueTxt = fmt(f * r.max, r.max<=10?2:1);
+    unitTxt = r.kind==='V' ? 'V' : 'mA';
+    calcTxt = fmt(s,1) + ' × ' + r.div;
+  }
+  $('roScale').textContent = scaleTxt;
+  $('roCalc').textContent = calcTxt;
+  $('roValue').textContent = valueTxt;
+  $('roUnit').textContent = unitTxt;
+
+  const st = $('roStatus');
+  let cls = '', txt = '';
+  if(res.warn){ cls = 'bad'; txt = res.warn; }
+  else if(r.kind === 'R' && !state.ohmZero){ cls = 'warn'; txt = '欧姆挡未调零：先把表笔短接，再调 Ω 调零旋钮'; }
+  else if(Math.abs(state.mechOffset) > 0.3){ cls = 'warn'; txt = '机械零位没对准，读数有系统偏差（点“机械调零”）'; }
+  else if(res.hint){ cls = ''; txt = res.hint; }
+  else { txt = '读数正常：' + (r.kind==='R' ? '欧姆刻度从右往左读，右端为 0 Ω' : '线性刻度从左往右读'); }
+
+  const key = cls + txt;
+  if(key !== lastRO){
+    lastRO = key;
+    st.className = 'status ' + cls;
+    st.textContent = txt;
+  }
+}
+
+/* ---------- 交互 ---------- */
+function setRange(i, silent){
+  const prev = RANGES[state.range];
+  state.range = i;
+  const r = RANGES[i];
+  const step = 300/(RANGES.length-1);
+  knobGroup.rotation.z = (-150 + i*step) * D2R;
+  if(r.kind === 'R' && (!silent || prev !== r)) state.ohmZero = false;
+  syncUI();
+  if(!silent && r.kind === 'R') toast('已换到 ' + r.label + ' 挡，欧姆挡换挡后要重新调零');
+}
+function setTarget(k){
+  state.target = k;
+  drawCard();
+  syncUI();
+}
+function toast(msg){
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+function syncUI(){
+  document.querySelectorAll('#gV button').forEach(b=>b.classList.toggle('on', +b.dataset.i === state.range));
+  document.querySelectorAll('#gA button').forEach(b=>b.classList.toggle('on', +b.dataset.i === state.range));
+  document.querySelectorAll('#gR button').forEach(b=>b.classList.toggle('on', +b.dataset.i === state.range));
+  document.querySelectorAll('#gT button').forEach(b=>b.classList.toggle('on', b.dataset.k === state.target));
+  $('tgRed').classList.toggle('on', state.plugged.red);
+  $('tgBlack').classList.toggle('on', state.plugged.black);
+  $('tgShort').classList.toggle('on', state.shorted);
+  $('tgRed').firstElementChild.textContent = state.plugged.red ? '红表笔已插入 ＋' : '红表笔已拔出';
+  $('tgBlack').firstElementChild.textContent = state.plugged.black ? '黑表笔已插入 COM' : '黑表笔已拔出';
+  probeRed.visible = state.plugged.red; wireRed.visible = state.plugged.red;
+  probeBlack.visible = state.plugged.black; wireBlack.visible = state.plugged.black;
+}
+
+// 按钮
+RANGES.forEach((r,i)=>{
+  if(r.kind === 'V') $('gV').appendChild(mkBtn(r.label, i, ''));
+  if(r.kind === 'A') $('gA').appendChild(mkBtn(r.label, i, ''));
+  if(r.kind === 'R') $('gR').appendChild(mkBtn(r.label, i, 'ohm'));
+});
+function mkBtn(label, i, cls){
+  const b = document.createElement('button');
+  b.textContent = label; b.dataset.i = i;
+  if(cls) b.className = cls;
+  b.onclick = ()=> setRange(i);
+  return b;
+}
+Object.entries(TARGETS).forEach(([k,t])=>{
+  const b = document.createElement('button');
+  b.textContent = t.name; b.dataset.k = k;
+  b.style.flex = '1 1 46%';
+  b.onclick = ()=> setTarget(k);
+  $('gT').appendChild(b);
+});
+
+$('tgRed').onclick = ()=>{
+  state.plugged.red = !state.plugged.red;
+  syncUI();
+  toast(state.plugged.red ? '红表笔已插入 ＋' : '红表笔已拔出，回路断开');
+};
+$('tgBlack').onclick = ()=>{
+  state.plugged.black = !state.plugged.black;
+  syncUI();
+  toast(state.plugged.black ? '黑表笔已插入 COM' : '黑表笔已拔出，回路断开');
+};
+$('tgShort').onclick = ()=>{
+  state.shorted = !state.shorted;
+  syncUI();
+  toast(state.shorted ? '两支表笔已经短接' : '表笔分开，接到被测元件上');
+};
+$('btnOhm').onclick = ()=>{
+  const r = RANGES[state.range];
+  if(r.kind !== 'R'){ toast('先把旋钮旋到电阻挡（×1 ～ ×1k）'); return; }
+  if(!state.plugged.red || !state.plugged.black){ toast('表笔没插好，先插好表笔'); return; }
+  if(!state.shorted){ toast('欧姆调零必须先把两支表笔短接，指针才会到 0 Ω'); return; }
+  state.ohmZero = true;
+  ohmKnob.rotation.z += 0.9;
+  toast('调零完成：短接时指针正好指在 0 Ω');
+};
+$('btnMech').onclick = ()=>{
+  if(Math.abs(state.mechOffset) < 0.05){ toast('机械零位已经是准的'); return; }
+  state.mechOffset = 0;
+  mechScrew.rotation.z += 0.7;
+  toast('机械调零完成：没有电流时指针指在左端 0 位');
+};
+$('btnReset').onclick = ()=>{ flyTo('front'); };
+$('btnFull').onclick = ()=>{
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+};
+
+// 视角控制
+let dragging = false, panning = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+canvas.addEventListener('pointerdown', e=>{
+  dragging = true;
+  panning = (e.button === 2 || e.button === 1 || e.shiftKey);
+  lastX = downX = e.clientX; lastY = downY = e.clientY;
+  camTween = null;
+  document.querySelectorAll('.presets button').forEach(b=>b.classList.remove('on'));
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  if(panning){ panView(dx, dy); return; }
+  VIEW.theta -= dx * 0.005;
+  VIEW.phi = Math.min(1.62, Math.max(0.55, VIEW.phi - dy * 0.004));
+  VIEW.theta = Math.min(1, Math.max(-1, VIEW.theta));
+  placeCamera(); syncCam();
+});
+canvas.addEventListener('pointerup', e=>{
+  const wasPanning = panning;
+  dragging = false; panning = false;
+  if(!wasPanning && Math.hypot(e.clientX-downX, e.clientY-downY) < 5) pick(e);
+});
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  camTween = null;
+  VIEW.r = Math.min(26, Math.max(5.0, VIEW.r + e.deltaY * 0.0055));
+  placeCamera(); syncCam();
+}, {passive:false});
+
+// 拾取
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+function pick(e){
+  const rect = canvas.getBoundingClientRect();
+  ptr.x = ((e.clientX - rect.left)/rect.width)*2 - 1;
+  ptr.y = -((e.clientY - rect.top)/rect.height)*2 + 1;
+  ray.setFromCamera(ptr, camera);
+  const hits = ray.intersectObjects([knobBody, knobRing, ohmBody, mechScrew, jackRed, jackBlack, card], true);
+  if(!hits.length) return;
+  let o = hits[0].object;
+  while(o.parent && o.parent !== scene) o = o.parent;
+  const name = o === knobGroup ? 'knob' : o === ohmKnob ? 'ohm' : o === jackRed ? 'red'
+             : o === jackBlack ? 'black' : o === card ? 'card' : o === mechScrew ? 'mech' : '';
+  if(name === 'knob'){
+    const next = e.shiftKey ? (state.range + RANGES.length - 1) % RANGES.length : (state.range + 1) % RANGES.length;
+    setRange(next);
+    toast('旋钮转到 ' + RANGES[next].label + ' 挡');
+  } else if(name === 'ohm'){
+    $('btnOhm').click();
+  } else if(name === 'mech'){
+    $('btnMech').click();
+  } else if(name === 'red'){
+    $('tgRed').click();
+  } else if(name === 'black'){
+    $('tgBlack').click();
+  } else if(name === 'card'){
+    const keys = Object.keys(TARGETS);
+    setTarget(keys[(keys.indexOf(state.target)+1) % keys.length]);
+    toast('换成：' + TARGETS[state.target].name);
+  }
+}
+
+// 悬停指针
+canvas.addEventListener('pointermove', e=>{
+  if(dragging) return;
+  const rect = canvas.getBoundingClientRect();
+  ptr.x = ((e.clientX - rect.left)/rect.width)*2 - 1;
+  ptr.y = -((e.clientY - rect.top)/rect.height)*2 + 1;
+  ray.setFromCamera(ptr, camera);
+  const hits = ray.intersectObjects([knobBody, knobRing, ohmBody, mechScrew, jackRed, jackBlack, card], true);
+  canvas.style.cursor = hits.length ? (e.shiftKey ? 'move' : 'pointer') : (e.shiftKey ? 'move' : 'grab');
+});
+
+/* ---------- 循环 ---------- */
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+const clock = new THREE.Clock();
+function loop(){
+  const dt = Math.min(0.033, clock.getDelta());
+  if(camTween){
+    camTween.t = Math.min(camTween.dur, camTween.t + dt);
+    const k = camTween.t / camTween.dur;
+    const e = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
+    const a = camTween.from, b = camTween.to;
+    VIEW.theta = a.theta + (b.theta - a.theta)*e;
+    VIEW.phi = a.phi + (b.phi - a.phi)*e;
+    VIEW.r = a.r + (b.r - a.r)*e;
+    VIEW.target.set(a.tx + (b.tx - a.tx)*e, a.ty + (b.ty - a.ty)*e, a.tz + (b.tz - a.tz)*e);
+    placeCamera(); syncCam();
+    if(k >= 1) camTween = null;
+  }
+  updateNeedle(dt);
+  updateReadout();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+
+// 初始化
+setRange(0, true);
+drawCard();
+syncUI();
+resize();
+placeCamera();
+syncCam();
+const _q = new URLSearchParams(location.search);
+const _v = _q.get('view');
+if(PRESETS[_v]){
+  const p = PRESETS[_v];
+  VIEW.theta = p.theta * D2R;
+  VIEW.phi = (90 - p.elev) * D2R;
+  VIEW.r = p.r;
+  VIEW.target.set(0, p.ty, p.tz);
+  document.querySelectorAll('.presets button').forEach(b=>b.classList.toggle('on', b.dataset.p === _v));
+}
+const _t = _q.get('theta'), _e = _q.get('elev'), _r = _q.get('r');
+const _x = _q.get('x'), _y = _q.get('y');
+if(_t !== null) VIEW.theta = Math.max(-1, Math.min(1, (+_t) * D2R));
+if(_e !== null) VIEW.phi = Math.max(0.55, Math.min(1.62, (90 - (+_e)) * D2R));
+if(_r !== null) VIEW.r = Math.max(5, Math.min(26, +_r));
+if(_x !== null) VIEW.target.x = Math.max(PAN.x[0], Math.min(PAN.x[1], +_x));
+if(_y !== null) VIEW.target.y = Math.max(PAN.y[0], Math.min(PAN.y[1], +_y));
+placeCamera(); syncCam();
+needleDeg = 55; needleGroup.rotation.z = 55 * D2R;
+loop();
+</script>
+</body>
+</html>

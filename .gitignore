@@ -1,0 +1,19 @@
+# Agent/tool-local memory and configuration
+.workbuddy/
+.codex/
+
+# Operating system and editor noise
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+# Generated output and caches
+node_modules/
+dist/
+coverage/
+.cache/
+*.log
+*.tmp
+*.temp
