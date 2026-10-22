@@ -15,9 +15,9 @@
 
 - `node --check` passed for the inline JavaScript in the production and development HTML pages.
 - Confirmed the development page resolves `../vendor/three.min.js` to the moved vendor file.
-- Browser/WebGL interaction checks were not run because no browser executable was available on PATH.
+- Chrome headless with SwiftShader rendered both production and development pages successfully at desktop sizes; the 390 x 844 mobile screenshot exposed and then verified the correction for control/lesson overlap.
+- WebGL model rendering and local file loading were visually confirmed. Full automated pointer-based interaction coverage was not run.
 
 ## Remaining work
 
-- Open `projects/multimeter/index.html` in the in-app browser and smoke-test interaction and mobile layout.
-- Confirm the primary branch name and local Git identity before the first commit if host-level defaults differ.
+- Open `projects/multimeter/index.html` in the in-app browser for manual pointer/touch interaction checks.
