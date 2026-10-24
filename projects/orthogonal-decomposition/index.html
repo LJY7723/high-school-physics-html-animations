@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#edf1ee">
+  <title>向量的正交分解 · 60 秒动画</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1c2927;
+      --muted: #65736e;
+      --line: #d7dfda;
+      --paper: #f8faf8;
+      --green: #087f73;
+      --blue: #416fd1;
+      --coral: #d85845;
+      --gold: #a87618;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #edf1ee;
+      color: var(--ink);
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      width: min(100% - 48px, 1220px);
+      margin: 0 auto;
+      padding: 24px 0 28px;
+    }
+
+    .masthead {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .duration {
+      flex: 0 0 auto;
+      padding: 7px 0 7px 16px;
+      border-left: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border: 1px solid #dce4df;
+      border-radius: 7px;
+      background: var(--paper);
+      box-shadow: 0 10px 28px rgb(30 48 39 / 8%);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .captions {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      min-height: 66px;
+      padding: 17px 2px 11px;
+    }
+
+    .caption-mark {
+      flex: 0 0 auto;
+      width: 3px;
+      height: 24px;
+      margin-top: 1px;
+      background: var(--gold);
+    }
+
+    .caption-text {
+      margin: 0;
+      color: #263330;
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .playback {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      min-height: 52px;
+      padding: 8px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .transport {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 9px;
+    }
+
+    button {
+      color: inherit;
+      font: inherit;
+    }
+
+    .transport button {
+      min-height: 36px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .play-button {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 12px;
+      background: var(--ink) !important;
+      color: white !important;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .play-symbol {
+      width: 16px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .restart-button {
+      width: 36px;
+      color: var(--muted);
+      font-size: 20px !important;
+      line-height: 1;
+    }
+
+    .transport button:hover { background: #e1e8e3; }
+    .transport .play-button:hover { background: #30413d !important; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #227a72; outline-offset: 3px; }
+
+    .seek-control {
+      display: flex;
+      flex: 1 1 auto;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      margin: 0;
+      border-radius: 3px;
+      appearance: none;
+      background: linear-gradient(to right, var(--green) var(--progress, 0%), #cbd5cf var(--progress, 0%));
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 13px;
+      height: 13px;
+      border: 2px solid white;
+      border-radius: 50%;
+      appearance: none;
+      background: var(--green);
+      box-shadow: 0 0 0 1px var(--green);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border: 2px solid white;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 1px var(--green);
+    }
+
+    .chapters {
+      display: flex;
+      gap: 22px;
+      overflow-x: auto;
+      padding: 3px 0 1px;
+      scrollbar-width: thin;
+    }
+
+    .chapter {
+      position: relative;
+      flex: 0 0 auto;
+      padding: 12px 0 10px;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: #66736e;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .chapter:hover { color: var(--ink); }
+    .chapter[aria-current="step"] { border-bottom-color: var(--green); color: var(--ink); font-weight: 700; }
+
+    @media (max-width: 650px) {
+      .page { width: calc(100% - 28px); padding: 17px 0 22px; }
+      .masthead { align-items: center; margin-bottom: 13px; }
+      .eyebrow { margin-bottom: 5px; font-size: 12px; }
+      h1 { font-size: 24px; }
+      .duration { padding-left: 10px; font-size: 12px; }
+      .stage { aspect-ratio: 4 / 3; }
+      .captions { min-height: 65px; gap: 10px; padding-top: 14px; }
+      .caption-text { font-size: 15px; }
+      .playback { display: block; padding: 9px 0; }
+      .transport { justify-content: flex-start; margin-bottom: 10px; }
+      .seek-control { gap: 9px; }
+      .chapters { gap: 17px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">高中数学 · 向量</p>
+        <h1>向量的正交分解</h1>
+      </div>
+      <div class="duration">动画时长　01:00</div>
+    </header>
+
+    <main>
+      <section class="stage" aria-label="正交分解动画画面">
+        <canvas id="animation" aria-label="向量 v=(4,2) 分解为平行分量和垂直分量"></canvas>
+      </section>
+
+      <div class="captions">
+        <span class="caption-mark" aria-hidden="true"></span>
+        <p class="caption-text" id="caption" aria-live="polite"></p>
+      </div>
+
+      <section class="playback" aria-label="动画播放控制">
+        <div class="transport">
+          <button class="play-button" id="play" type="button" aria-label="播放动画" aria-pressed="false">
+            <span class="play-symbol" id="playSymbol" aria-hidden="true">▶</span>
+            <span id="playLabel">播放</span>
+          </button>
+          <button class="restart-button" id="restart" type="button" aria-label="从头播放" title="从头播放">↺</button>
+        </div>
+        <div class="seek-control">
+          <span id="elapsed">00:00</span>
+          <input id="seek" type="range" min="0" max="60" step="0.1" value="0" aria-label="动画进度">
+          <span>01:00</span>
+        </div>
+      </section>
+
+      <nav class="chapters" id="chapters" aria-label="动画章节">
+        <button class="chapter" type="button" data-time="0">提出问题</button>
+        <button class="chapter" type="button" data-time="7">选定方向</button>
+        <button class="chapter" type="button" data-time="16">作垂线</button>
+        <button class="chapter" type="button" data-time="27">拆出剩余</button>
+        <button class="chapter" type="button" data-time="39">验证垂直</button>
+        <button class="chapter" type="button" data-time="50">通用公式</button>
+        <button class="chapter" type="button" data-time="57">回顾</button>
+      </nav>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const DURATION = 60;
+      const SCENES = [
+        { start: 0, end: 7, title: "一个斜箭头", caption: "这支向量 v=(4,2)，能拆成沿斜线和垂直斜线的两段吗？" },
+        { start: 7, end: 16, title: "选定一个方向", caption: "目标方向 d=(1,1)。我们要找 v 在 d 方向上的投影。" },
+        { start: 16, end: 27, title: "找到平行分量", caption: "从 v 的终点向 d 作垂线，脚点落在 (3,3)，所以 v‖=(3,3)。" },
+        { start: 27, end: 39, title: "补上垂直分量", caption: "剩下的一段是 v⊥=(1,−1)。首尾相接，两段正好还原 v。" },
+        { start: 39, end: 50, title: "验证互相垂直", caption: "v‖·v⊥ = 3×1 + 3×(−1) = 0，所以两个分量互相垂直。" },
+        { start: 50, end: 57, title: "推广到任意方向", caption: "先投影到 d，再用 v 减去投影，就得到垂直分量。" },
+        { start: 57, end: 60, title: "正交分解", caption: "记住：沿目标方向的投影 + 垂直剩余 = 原向量。" }
+      ];
+
+      const COLORS = {
+        paper: "#f8faf8",
+        ink: "#1c2927",
+        muted: "#75827d",
+        grid: "#e3e9e5",
+        axis: "#899690",
+        green: "#087f73",
+        blue: "#416fd1",
+        coral: "#d85845",
+        gold: "#a87618",
+        white: "#ffffff"
+      };
+
+      const canvas = document.getElementById("animation");
+      const ctx = canvas.getContext("2d");
+      const playButton = document.getElementById("play");
+      const playSymbol = document.getElementById("playSymbol");
+      const playLabel = document.getElementById("playLabel");
+      const seek = document.getElementById("seek");
+      const elapsed = document.getElementById("elapsed");
+      const caption = document.getElementById("caption");
+      const chapterButtons = [...document.querySelectorAll(".chapter")];
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      let width = 0;
+      let height = 0;
+      let pixelRatio = 1;
+      let time = 0;
+      let playing = false;
+      let startTime = 0;
+      let frameId = 0;
+
+      const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
+      const ease = value => {
+        const t = clamp(value);
+        return t * t * (3 - 2 * t);
+      };
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const map = (point, originX, originY, unit) => [originX + point[0] * unit, originY - point[1] * unit];
+
+      function currentScene(seconds) {
+        return SCENES.findIndex((scene, index) => seconds >= scene.start && (seconds < scene.end || index === SCENES.length - 1));
+      }
+
+      function formatTime(seconds) {
+        const whole = Math.floor(clamp(seconds, 0, DURATION));
+        const minutes = Math.floor(whole / 60);
+        const remainder = whole % 60;
+        return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+      }
+
+      function setPlaybackState(active) {
+        playing = active;
+        playButton.setAttribute("aria-pressed", String(active));
+        if (active) {
+          playSymbol.textContent = "Ⅱ";
+          playLabel.textContent = "暂停";
+          playButton.setAttribute("aria-label", "暂停动画");
+        } else {
+          playSymbol.textContent = time >= DURATION ? "↻" : "▶";
+          playLabel.textContent = time >= DURATION ? "再看一次" : "播放";
+          playButton.setAttribute("aria-label", time >= DURATION ? "再看一次" : "播放动画");
+        }
+      }
+
+      function updateControls() {
+        const sceneIndex = currentScene(time);
+        seek.value = String(time);
+        seek.style.setProperty("--progress", `${(time / DURATION) * 100}%`);
+        elapsed.textContent = formatTime(time);
+        caption.textContent = SCENES[sceneIndex].caption;
+        for (const [index, button] of chapterButtons.entries()) {
+          if (index === sceneIndex) button.setAttribute("aria-current", "step");
+          else button.removeAttribute("aria-current");
+        }
+      }
+
+      function line(a, b, color, thickness = 1, alpha = 1, dash = []) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = thickness;
+        ctx.lineCap = "round";
+        ctx.setLineDash(dash);
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function arrow(a, b, color, thickness = 3, alpha = 1, dashed = false) {
+        const dx = b[0] - a[0];
+        const dy = b[1] - a[1];
+        const length = Math.hypot(dx, dy);
+        if (length < 2) return;
+        const angle = Math.atan2(dy, dx);
+        const head = clamp(thickness * 3.3, 8, 18);
+        line(a, b, color, thickness, alpha, dashed ? [7, 6] : []);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(b[0], b[1]);
+        ctx.lineTo(b[0] - head * Math.cos(angle - 0.48), b[1] - head * Math.sin(angle - 0.48));
+        ctx.lineTo(b[0] - head * Math.cos(angle + 0.48), b[1] - head * Math.sin(angle + 0.48));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function text(content, x, y, size, color, weight = 500, align = "left") {
+        ctx.save();
+        ctx.font = `${weight} ${size}px "Segoe UI", "Microsoft YaHei", sans-serif`;
+        ctx.textAlign = align;
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = color;
+        ctx.fillText(content, x, y);
+        ctx.restore();
+      }
+
+      function point(position, color, radius = 4, alpha = 1) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(position[0], position[1], radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawRightAngle(foot, unit, alpha) {
+        const size = Math.max(8, unit * 0.16);
+        const invRoot2 = Math.SQRT1_2;
+        const along = [-invRoot2 * size, invRoot2 * size];
+        const across = [invRoot2 * size, invRoot2 * size];
+        const corner = [foot[0] + along[0], foot[1] + along[1]];
+        const far = [corner[0] + across[0], corner[1] + across[1]];
+        const end = [foot[0] + across[0], foot[1] + across[1]];
+        line(foot, corner, COLORS.gold, 1.7, alpha);
+        line(corner, far, COLORS.gold, 1.7, alpha);
+        line(far, end, COLORS.gold, 1.7, alpha);
+      }
+
+      function drawGrid(originX, originY, unit, rightEdge, alpha) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(8, 35, rightEdge - 8, height - 42);
+        ctx.clip();
+        for (let x = -3; x <= 5; x++) {
+          const p1 = map([x, -3], originX, originY, unit);
+          const p2 = map([x, 4], originX, originY, unit);
+          line(p1, p2, x === 0 ? COLORS.axis : COLORS.grid, x === 0 ? 1.35 : 1, alpha);
+        }
+        for (let y = -3; y <= 4; y++) {
+          const p1 = map([-3, y], originX, originY, unit);
+          const p2 = map([5, y], originX, originY, unit);
+          line(p1, p2, y === 0 ? COLORS.axis : COLORS.grid, y === 0 ? 1.35 : 1, alpha);
+        }
+        ctx.restore();
+      }
+
+      function drawPanel(sceneIndex, panelX, unit, alpha = 1) {
+        const compact = width < 650;
+        const titleSize = clamp(width * 0.025, 15, 28);
+        const bodySize = clamp(width * 0.019, 13, 20);
+        const formulaSize = clamp(width * 0.021, 14, 24);
+        const top = height * 0.21;
+        const gap = compact ? 28 : 39;
+        const panelWidth = width - panelX - 18;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        line([panelX - 18, height * 0.13], [panelX - 18, height * 0.87], "#dce4df", 1.2, 0.95);
+        text("这一幕", panelX, top - 26, clamp(bodySize * 0.74, 12, 14), COLORS.green, 700);
+        text(SCENES[sceneIndex].title, panelX, top, titleSize, COLORS.ink, 700);
+        line([panelX, top + 22], [panelX + Math.min(panelWidth, 55), top + 22], COLORS.gold, 2, 0.9);
+
+        if (sceneIndex === 0) {
+          text("v = (4, 2)", panelX, top + gap + 3, formulaSize + 2, COLORS.coral, 700);
+          text("向右 4 格", panelX, top + gap * 2, bodySize, COLORS.muted);
+          text("向上 2 格", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
+        } else if (sceneIndex === 1) {
+          text("d = (1, 1)", panelX, top + gap + 3, formulaSize + 2, COLORS.gold, 700);
+          text("选定目标方向", panelX, top + gap * 2, bodySize, COLORS.muted);
+          text("平行于 d", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
+        } else if (sceneIndex === 2) {
+          text("v‖ = (3, 3)", panelX, top + gap + 3, formulaSize + 1, COLORS.green, 700);
+          text("沿 d 的投影", panelX, top + gap * 2, bodySize, COLORS.muted);
+          text("投影脚点 P", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
+        } else if (sceneIndex === 3) {
+          text("v = v‖ + v⊥", panelX, top + gap + 3, formulaSize, COLORS.ink, 700);
+          text("v⊥ = (1, −1)", panelX, top + gap * 2 + 3, formulaSize, COLORS.blue, 700);
+          text("从 P 接回终点", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
+        } else if (sceneIndex === 4) {
+          text("3×1 + 3×(−1)", panelX, top + gap + 3, formulaSize, COLORS.blue, 700);
+          text("= 0", panelX, top + gap * 2 + 6, formulaSize + 8, COLORS.green, 700);
+          text("点积为零", panelX, top + gap * 3 + 1, bodySize, COLORS.muted);
+        } else if (sceneIndex === 6) {
+          text("v = v‖ + v⊥", panelX, top + gap + 5, formulaSize, COLORS.ink, 700);
+          text("(4,2) = (3,3) + (1,−1)", panelX, top + gap * 2 + 5, clamp(width * 0.017, 12, 18), COLORS.green, 650);
+          text("投影 + 垂直剩余", panelX, top + gap * 3 + 3, bodySize, COLORS.muted);
+        }
+        ctx.restore();
+      }
+
+      function drawFormulaScene(sceneIndex) {
+        const boxX = width * 0.07;
+        const boxY = height * 0.22;
+        const boxW = width * 0.86;
+        const boxH = height * 0.58;
+        ctx.save();
+        ctx.fillStyle = COLORS.white;
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = "#d8e1db";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(boxX + 0.5, boxY + 0.5, boxW - 1, boxH - 1);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        if (sceneIndex === 5) {
+          const titleSize = clamp(width * 0.023, 16, 27);
+          const mathSize = clamp(width * 0.026, 17, 30);
+          text("对任意非零方向 d", width / 2, boxY + boxH * 0.27, titleSize, COLORS.gold, 700, "center");
+          text("v‖ = ((v·d)/(d·d)) d", width / 2, boxY + boxH * 0.52, mathSize, COLORS.green, 700, "center");
+          text("v⊥ = v − v‖", width / 2, boxY + boxH * 0.75, mathSize, COLORS.blue, 700, "center");
+        } else {
+          const equationSize = clamp(width * 0.032, 19, 36);
+          const noteSize = clamp(width * 0.018, 14, 20);
+          text("正交分解", width / 2, boxY + boxH * 0.24, clamp(width * 0.024, 17, 28), COLORS.gold, 700, "center");
+          text("v = (3, 3) + (1, −1)", width / 2, boxY + boxH * 0.52, equationSize, COLORS.ink, 700, "center");
+          text("平行分量       垂直分量", width / 2, boxY + boxH * 0.76, noteSize, COLORS.muted, 500, "center");
+        }
+        ctx.restore();
+      }
+
+      function draw() {
+        if (!width || !height) return;
+        ctx.save();
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = COLORS.paper;
+        ctx.fillRect(0, 0, width, height);
+
+        const index = currentScene(time);
+        const panelX = width * 0.64;
+        const originX = width * 0.255;
+        const originY = height * 0.735;
+        const unit = Math.min(width * 0.067, height * 0.145);
+        const origin = map([0, 0], originX, originY, unit);
+        const endpoint = map([4, 2], originX, originY, unit);
+        const foot = map([3, 3], originX, originY, unit);
+        const formulaScene = index === 5 || index === 6;
+        const gridAlpha = formulaScene ? 0.26 : 1;
+        drawGrid(originX, originY, unit, panelX - 8, gridAlpha);
+
+        text("O", origin[0] - 8, origin[1] + 16, clamp(width * 0.015, 12, 17), COLORS.muted, 600, "right");
+        text("x", panelX - 23, origin[1] - 10, clamp(width * 0.015, 12, 17), COLORS.muted, 600);
+        text("y", origin[0] + 11, height * 0.15, clamp(width * 0.015, 12, 17), COLORS.muted, 600);
+
+        const targetAlpha = ease((time - 7) / 1.25);
+        if (targetAlpha > 0) {
+          const directionLineStart = map([-2.6, -2.6], originX, originY, unit);
+          const directionLineEnd = map([4.1, 4.1], originX, originY, unit);
+          line(directionLineStart, directionLineEnd, COLORS.green, 2, 0.28 * targetAlpha);
+          arrow(origin, map([1.2, 1.2], originX, originY, unit), COLORS.gold, 3, targetAlpha);
+          text("d=(1,1)", map([1.28, 1.47], originX, originY, unit)[0], map([1.28, 1.47], originX, originY, unit)[1], clamp(width * 0.016, 12, 18), COLORS.gold, 700);
+        }
+
+        const vectorReveal = ease(time / 1.6);
+        const componentsReveal = ease((time - 15.5) / 1.8);
+        const residualReveal = ease((time - 27) / 1.8);
+        const verifyReveal = ease((time - 39) / 0.8);
+        const quiet = formulaScene ? 0.2 : 1;
+        const originalAlpha = lerp(1, 0.26, residualReveal) * quiet;
+        const movingEndpoint = [lerp(origin[0], endpoint[0], vectorReveal), lerp(origin[1], endpoint[1], vectorReveal)];
+        arrow(origin, movingEndpoint, COLORS.coral, 4, originalAlpha);
+        point(origin, COLORS.ink, 4, 0.85);
+        point(endpoint, COLORS.coral, 4, vectorReveal * quiet);
+        if (vectorReveal > 0.55 && !formulaScene) {
+          text("v=(4,2)", endpoint[0] - 8, endpoint[1] - 14, clamp(width * 0.016, 12, 18), COLORS.coral, 700, "right");
+        }
+
+        const projectionAlpha = ease((time - 12.2) / 2.7);
+        if (projectionAlpha > 0) {
+          line(foot, endpoint, COLORS.blue, 2, projectionAlpha, [7, 6]);
+          point(foot, COLORS.green, 4, projectionAlpha);
+        }
+
+        if (componentsReveal > 0) {
+          arrow(origin, foot, COLORS.green, 4.4, componentsReveal * quiet);
+          drawRightAngle(foot, unit, componentsReveal * quiet);
+          if (!formulaScene) {
+            const pLabel = map([1.12, 3.48], originX, originY, unit);
+            text("v‖=(3,3)", pLabel[0], pLabel[1], clamp(width * 0.015, 12, 17), COLORS.green, 700);
+          }
+        }
+
+        if (residualReveal > 0) {
+          const residualEnd = [lerp(foot[0], endpoint[0], residualReveal), lerp(foot[1], endpoint[1], residualReveal)];
+          arrow(foot, residualEnd, COLORS.blue, 4.4, residualReveal * quiet);
+          if (residualReveal > 0.45 && !formulaScene) {
+            const label = map([3.38, 2.53], originX, originY, unit);
+            text("v⊥=(1,−1)", label[0] - 5, label[1], clamp(width * 0.015, 12, 17), COLORS.blue, 700, "right");
+          }
+        }
+
+        if (verifyReveal > 0 && index === 4) {
+          point(foot, COLORS.gold, 7, 0.24 * verifyReveal);
+          point(endpoint, COLORS.gold, 7, 0.22 * verifyReveal);
+        }
+
+        if (formulaScene) {
+          drawFormulaScene(index);
+        } else {
+          drawPanel(index, panelX, unit);
+        }
+
+        const progress = (time / DURATION) * 100;
+        ctx.fillStyle = "#d6dfd9";
+        ctx.fillRect(0, 0, width, 3);
+        ctx.fillStyle = COLORS.green;
+        ctx.fillRect(0, 0, width * progress / 100, 3);
+        ctx.restore();
+      }
+
+      function render() {
+        updateControls();
+        draw();
+      }
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        width = rect.width;
+        height = rect.height;
+        pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(width * pixelRatio);
+        canvas.height = Math.round(height * pixelRatio);
+        render();
+      }
+
+      function seekTo(seconds) {
+        time = clamp(Number(seconds) || 0, 0, DURATION);
+        if (playing) startTime = performance.now() - time * 1000;
+        else setPlaybackState(false);
+        render();
+      }
+
+      function tick(now) {
+        if (!playing) return;
+        time = clamp((now - startTime) / 1000, 0, DURATION);
+        render();
+        if (time >= DURATION) {
+          setPlaybackState(false);
+          render();
+          frameId = 0;
+          return;
+        }
+        frameId = requestAnimationFrame(tick);
+      }
+
+      function play() {
+        if (time >= DURATION) time = 0;
+        setPlaybackState(true);
+        startTime = performance.now() - time * 1000;
+        cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(tick);
+        render();
+      }
+
+      function pause() {
+        if (!playing) return;
+        setPlaybackState(false);
+        cancelAnimationFrame(frameId);
+        frameId = 0;
+        render();
+      }
+
+      playButton.addEventListener("click", () => playing ? pause() : play());
+      document.getElementById("restart").addEventListener("click", () => {
+        time = 0;
+        play();
+      });
+      seek.addEventListener("input", event => seekTo(event.target.value));
+      chapterButtons.forEach(button => {
+        button.addEventListener("click", () => seekTo(button.dataset.time));
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.altKey || event.ctrlKey || event.metaKey || event.target.matches("button, input, textarea, select")) return;
+        if (event.code === "Space") {
+          event.preventDefault();
+          playing ? pause() : play();
+        } else if (event.code === "ArrowLeft") {
+          seekTo(time - 5);
+        } else if (event.code === "ArrowRight") {
+          seekTo(time + 5);
+        }
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) pause();
+      });
+
+      const resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(canvas);
+      resize();
+      if (!reduceMotion) play();
+    })();
+  </script>
+</body>
+</html>
