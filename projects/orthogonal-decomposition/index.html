@@ -106,6 +106,37 @@
       line-height: 1.55;
     }
 
+    .vector-symbol {
+      position: relative;
+      display: inline-block;
+      margin: 0 0.04em;
+      line-height: 1;
+    }
+
+    .vector-symbol::before {
+      position: absolute;
+      top: -0.13em;
+      left: 0.06em;
+      right: 0.01em;
+      height: 0.07em;
+      border-radius: 99px;
+      background: currentColor;
+      content: "";
+    }
+
+    .vector-symbol::after {
+      position: absolute;
+      top: -0.22em;
+      right: -0.03em;
+      width: 0.25em;
+      height: 0.25em;
+      border-top: 0.07em solid currentColor;
+      border-right: 0.07em solid currentColor;
+      content: "";
+      transform: rotate(45deg);
+      transform-origin: center;
+    }
+
     .playback {
       display: flex;
       align-items: center;
@@ -260,7 +291,7 @@
 
     <main>
       <section class="stage" aria-label="正交分解动画画面">
-        <canvas id="animation" aria-label="向量 v=(4,2) 分解为平行分量和垂直分量"></canvas>
+        <canvas id="animation" aria-label="向量 a=(4,2) 沿 x 轴和 y 轴分解"></canvas>
       </section>
 
       <div class="captions">
@@ -285,11 +316,11 @@
 
       <nav class="chapters" id="chapters" aria-label="动画章节">
         <button class="chapter" type="button" data-time="0">提出问题</button>
-        <button class="chapter" type="button" data-time="7">选定方向</button>
-        <button class="chapter" type="button" data-time="16">作垂线</button>
-        <button class="chapter" type="button" data-time="27">拆出剩余</button>
+        <button class="chapter" type="button" data-time="7">选定坐标轴</button>
+        <button class="chapter" type="button" data-time="16">取出 x 分量</button>
+        <button class="chapter" type="button" data-time="27">补上 y 分量</button>
         <button class="chapter" type="button" data-time="39">验证垂直</button>
-        <button class="chapter" type="button" data-time="50">通用公式</button>
+        <button class="chapter" type="button" data-time="50">一般形式</button>
         <button class="chapter" type="button" data-time="57">回顾</button>
       </nav>
     </main>
@@ -301,13 +332,13 @@
 
       const DURATION = 60;
       const SCENES = [
-        { start: 0, end: 7, title: "一个斜箭头", caption: "这支向量 v=(4,2)，能拆成沿斜线和垂直斜线的两段吗？" },
-        { start: 7, end: 16, title: "选定一个方向", caption: "目标方向 d=(1,1)。我们要找 v 在 d 方向上的投影。" },
-        { start: 16, end: 27, title: "找到平行分量", caption: "从 v 的终点向 d 作垂线，脚点落在 (3,3)，所以 v‖=(3,3)。" },
-        { start: 27, end: 39, title: "补上垂直分量", caption: "剩下的一段是 v⊥=(1,−1)。首尾相接，两段正好还原 v。" },
-        { start: 39, end: 50, title: "验证互相垂直", caption: "v‖·v⊥ = 3×1 + 3×(−1) = 0，所以两个分量互相垂直。" },
-        { start: 50, end: 57, title: "推广到任意方向", caption: "先投影到 d，再用 v 减去投影，就得到垂直分量。" },
-        { start: 57, end: 60, title: "正交分解", caption: "记住：沿目标方向的投影 + 垂直剩余 = 原向量。" }
+        { start: 0, end: 7, title: "一支斜向量", caption: "向量 {{a}}=(4,2)，怎样把它沿 x 轴和 y 轴拆开？" },
+        { start: 7, end: 16, title: "选定坐标轴", caption: "沿 x 轴取一个分量，沿 y 轴取一个分量；两条坐标轴互相垂直。" },
+        { start: 16, end: 27, title: "取出 x 方向", caption: "从终点向 x 轴作垂线，脚点是 P=(4,0)，得到 {{a}}₁=(4,0)。" },
+        { start: 27, end: 39, title: "补上 y 方向", caption: "从 P 向上到终点，得到 {{a}}₂=(0,2)，两段首尾相接还原 {{a}}。" },
+        { start: 39, end: 50, title: "验证互相垂直", caption: "{{a}}₁·{{a}}₂=4×0+0×2=0，所以两个分量互相垂直。" },
+        { start: 50, end: 57, title: "写成一般形式", caption: "若 {{a}}=(x,y)，那么 {{a}}=x{{i}}+y{{j}}，两个轴向分量分别沿 x 轴、y 轴。" },
+        { start: 57, end: 60, title: "正交分解", caption: "记住：{{a}}={{a}}₁+{{a}}₂=(4,0)+(0,2)。" }
       ];
 
       const COLORS = {
@@ -380,7 +411,10 @@
         seek.value = String(time);
         seek.style.setProperty("--progress", `${(time / DURATION) * 100}%`);
         elapsed.textContent = formatTime(time);
-        caption.textContent = SCENES[sceneIndex].caption;
+        caption.innerHTML = SCENES[sceneIndex].caption
+          .replaceAll("{{a}}", '<span class="vector-symbol" aria-label="向量 a">a</span>')
+          .replaceAll("{{i}}", '<span class="vector-symbol" aria-label="单位向量 i">i</span>')
+          .replaceAll("{{j}}", '<span class="vector-symbol" aria-label="单位向量 j">j</span>');
         for (const [index, button] of chapterButtons.entries()) {
           if (index === sceneIndex) button.setAttribute("aria-current", "step");
           else button.removeAttribute("aria-current");
@@ -424,10 +458,48 @@
       function text(content, x, y, size, color, weight = 500, align = "left") {
         ctx.save();
         ctx.font = `${weight} ${size}px "Segoe UI", "Microsoft YaHei", sans-serif`;
-        ctx.textAlign = align;
         ctx.textBaseline = "middle";
         ctx.fillStyle = color;
-        ctx.fillText(content, x, y);
+        if (![...content].some(character => "aij".includes(character))) {
+          ctx.textAlign = align;
+          ctx.fillText(content, x, y);
+          ctx.restore();
+          return;
+        }
+
+        const characters = [...content];
+        const widths = characters.map(character => ctx.measureText(character).width);
+        const totalWidth = widths.reduce((sum, characterWidth) => sum + characterWidth, 0);
+        let cursor = align === "center" ? x - totalWidth / 2 : align === "right" ? x - totalWidth : x;
+        ctx.textAlign = "left";
+        characters.forEach((character, index) => {
+          ctx.fillText(character, cursor, y);
+          if ("aij".includes(character)) drawVectorArrow(cursor, y, widths[index], size, color);
+          cursor += widths[index];
+        });
+        ctx.restore();
+      }
+
+      function drawVectorArrow(x, y, letterWidth, size, color) {
+        const start = x + letterWidth * 0.08;
+        const end = x + letterWidth * 0.9;
+        const arrowY = y - size * 0.56;
+        const head = Math.max(2, size * 0.12);
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = Math.max(1, size * 0.055);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(start, arrowY);
+        ctx.lineTo(end, arrowY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(end, arrowY);
+        ctx.lineTo(end - head, arrowY - head * 0.8);
+        ctx.lineTo(end - head, arrowY + head * 0.8);
+        ctx.closePath();
+        ctx.fill();
         ctx.restore();
       }
 
@@ -442,13 +514,10 @@
       }
 
       function drawRightAngle(foot, unit, alpha) {
-        const size = Math.max(8, unit * 0.16);
-        const invRoot2 = Math.SQRT1_2;
-        const along = [-invRoot2 * size, invRoot2 * size];
-        const across = [invRoot2 * size, invRoot2 * size];
-        const corner = [foot[0] + along[0], foot[1] + along[1]];
-        const far = [corner[0] + across[0], corner[1] + across[1]];
-        const end = [foot[0] + across[0], foot[1] + across[1]];
+        const size = Math.max(9, unit * 0.24);
+        const corner = [foot[0] - size, foot[1]];
+        const far = [foot[0] - size, foot[1] - size];
+        const end = [foot[0], foot[1] - size];
         line(foot, corner, COLORS.gold, 1.7, alpha);
         line(corner, far, COLORS.gold, 1.7, alpha);
         line(far, end, COLORS.gold, 1.7, alpha);
@@ -489,29 +558,29 @@
         line([panelX, top + 22], [panelX + Math.min(panelWidth, 55), top + 22], COLORS.gold, 2, 0.9);
 
         if (sceneIndex === 0) {
-          text("v = (4, 2)", panelX, top + gap + 3, formulaSize + 2, COLORS.coral, 700);
-          text("向右 4 格", panelX, top + gap * 2, bodySize, COLORS.muted);
-          text("向上 2 格", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
+          text("a = (4, 2)", panelX, top + gap + 3, formulaSize + 2, COLORS.coral, 700);
+          text("横向 4 格", panelX, top + gap * 2, bodySize, COLORS.muted);
+          text("纵向 2 格", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
         } else if (sceneIndex === 1) {
-          text("d = (1, 1)", panelX, top + gap + 3, formulaSize + 2, COLORS.gold, 700);
-          text("选定目标方向", panelX, top + gap * 2, bodySize, COLORS.muted);
-          text("平行于 d", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
+          text("x 方向 + y 方向", panelX, top + gap + 3, formulaSize, COLORS.gold, 700);
+          text("沿两条坐标轴", panelX, top + gap * 2, bodySize, COLORS.muted);
+          text("两轴互相垂直", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
         } else if (sceneIndex === 2) {
-          text("v‖ = (3, 3)", panelX, top + gap + 3, formulaSize + 1, COLORS.green, 700);
-          text("沿 d 的投影", panelX, top + gap * 2, bodySize, COLORS.muted);
-          text("投影脚点 P", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
+          text("a₁ = (4, 0)", panelX, top + gap + 3, formulaSize + 1, COLORS.green, 700);
+          text("x 方向分量", panelX, top + gap * 2, bodySize, COLORS.muted);
+          text("脚点 P=(4,0)", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
         } else if (sceneIndex === 3) {
-          text("v = v‖ + v⊥", panelX, top + gap + 3, formulaSize, COLORS.ink, 700);
-          text("v⊥ = (1, −1)", panelX, top + gap * 2 + 3, formulaSize, COLORS.blue, 700);
+          text("a = a₁ + a₂", panelX, top + gap + 3, formulaSize, COLORS.ink, 700);
+          text("a₂ = (0, 2)", panelX, top + gap * 2 + 3, formulaSize, COLORS.blue, 700);
           text("从 P 接回终点", panelX, top + gap * 3 - 7, bodySize, COLORS.muted);
         } else if (sceneIndex === 4) {
-          text("3×1 + 3×(−1)", panelX, top + gap + 3, formulaSize, COLORS.blue, 700);
+          text("4×0 + 0×2", panelX, top + gap + 3, formulaSize, COLORS.blue, 700);
           text("= 0", panelX, top + gap * 2 + 6, formulaSize + 8, COLORS.green, 700);
           text("点积为零", panelX, top + gap * 3 + 1, bodySize, COLORS.muted);
         } else if (sceneIndex === 6) {
-          text("v = v‖ + v⊥", panelX, top + gap + 5, formulaSize, COLORS.ink, 700);
-          text("(4,2) = (3,3) + (1,−1)", panelX, top + gap * 2 + 5, clamp(width * 0.017, 12, 18), COLORS.green, 650);
-          text("投影 + 垂直剩余", panelX, top + gap * 3 + 3, bodySize, COLORS.muted);
+          text("a = a₁ + a₂", panelX, top + gap + 5, formulaSize, COLORS.ink, 700);
+          text("(4,2) = (4,0) + (0,2)", panelX, top + gap * 2 + 5, clamp(width * 0.017, 12, 18), COLORS.green, 650);
+          text("x 分量 + y 分量", panelX, top + gap * 3 + 3, bodySize, COLORS.muted);
         }
         ctx.restore();
       }
@@ -532,15 +601,15 @@
         if (sceneIndex === 5) {
           const titleSize = clamp(width * 0.023, 16, 27);
           const mathSize = clamp(width * 0.026, 17, 30);
-          text("对任意非零方向 d", width / 2, boxY + boxH * 0.27, titleSize, COLORS.gold, 700, "center");
-          text("v‖ = ((v·d)/(d·d)) d", width / 2, boxY + boxH * 0.52, mathSize, COLORS.green, 700, "center");
-          text("v⊥ = v − v‖", width / 2, boxY + boxH * 0.75, mathSize, COLORS.blue, 700, "center");
+          text("若 a=(x,y)", width / 2, boxY + boxH * 0.27, titleSize, COLORS.gold, 700, "center");
+          text("a₁=x i=(x,0)", width / 2, boxY + boxH * 0.52, mathSize, COLORS.green, 700, "center");
+          text("a₂=y j=(0,y)", width / 2, boxY + boxH * 0.75, mathSize, COLORS.blue, 700, "center");
         } else {
           const equationSize = clamp(width * 0.032, 19, 36);
           const noteSize = clamp(width * 0.018, 14, 20);
           text("正交分解", width / 2, boxY + boxH * 0.24, clamp(width * 0.024, 17, 28), COLORS.gold, 700, "center");
-          text("v = (3, 3) + (1, −1)", width / 2, boxY + boxH * 0.52, equationSize, COLORS.ink, 700, "center");
-          text("平行分量       垂直分量", width / 2, boxY + boxH * 0.76, noteSize, COLORS.muted, 500, "center");
+          text("a = a₁ + a₂", width / 2, boxY + boxH * 0.52, equationSize, COLORS.ink, 700, "center");
+          text("x 方向分量       y 方向分量", width / 2, boxY + boxH * 0.76, noteSize, COLORS.muted, 500, "center");
         }
         ctx.restore();
       }
@@ -560,7 +629,7 @@
         const unit = Math.min(width * 0.067, height * 0.145);
         const origin = map([0, 0], originX, originY, unit);
         const endpoint = map([4, 2], originX, originY, unit);
-        const foot = map([3, 3], originX, originY, unit);
+        const xFoot = map([4, 0], originX, originY, unit);
         const formulaScene = index === 5 || index === 6;
         const gridAlpha = formulaScene ? 0.26 : 1;
         drawGrid(originX, originY, unit, panelX - 8, gridAlpha);
@@ -569,13 +638,16 @@
         text("x", panelX - 23, origin[1] - 10, clamp(width * 0.015, 12, 17), COLORS.muted, 600);
         text("y", origin[0] + 11, height * 0.15, clamp(width * 0.015, 12, 17), COLORS.muted, 600);
 
-        const targetAlpha = ease((time - 7) / 1.25);
-        if (targetAlpha > 0) {
-          const directionLineStart = map([-2.6, -2.6], originX, originY, unit);
-          const directionLineEnd = map([4.1, 4.1], originX, originY, unit);
-          line(directionLineStart, directionLineEnd, COLORS.green, 2, 0.28 * targetAlpha);
-          arrow(origin, map([1.2, 1.2], originX, originY, unit), COLORS.gold, 3, targetAlpha);
-          text("d=(1,1)", map([1.28, 1.47], originX, originY, unit)[0], map([1.28, 1.47], originX, originY, unit)[1], clamp(width * 0.016, 12, 18), COLORS.gold, 700);
+        const axisAlpha = index === 1 ? ease((time - 7) / 1.25) : 0;
+        if (axisAlpha > 0) {
+          const xDirection = map([1.35, 0], originX, originY, unit);
+          const yDirection = map([0, 1.35], originX, originY, unit);
+          arrow(origin, xDirection, COLORS.gold, 3, axisAlpha);
+          arrow(origin, yDirection, COLORS.blue, 3, axisAlpha);
+          const xLabel = map([1.5, -0.18], originX, originY, unit);
+          const yLabel = map([-0.15, 1.55], originX, originY, unit);
+          text("x 方向", xLabel[0], xLabel[1], clamp(width * 0.016, 12, 18), COLORS.gold, 700);
+          text("y 方向", yLabel[0], yLabel[1], clamp(width * 0.016, 12, 18), COLORS.blue, 700);
         }
 
         const vectorReveal = ease(time / 1.6);
@@ -589,35 +661,35 @@
         point(origin, COLORS.ink, 4, 0.85);
         point(endpoint, COLORS.coral, 4, vectorReveal * quiet);
         if (vectorReveal > 0.55 && !formulaScene) {
-          text("v=(4,2)", endpoint[0] - 8, endpoint[1] - 14, clamp(width * 0.016, 12, 18), COLORS.coral, 700, "right");
+          text("a=(4,2)", endpoint[0] - 8, endpoint[1] - 14, clamp(width * 0.016, 12, 18), COLORS.coral, 700, "right");
         }
 
         const projectionAlpha = ease((time - 12.2) / 2.7);
         if (projectionAlpha > 0) {
-          line(foot, endpoint, COLORS.blue, 2, projectionAlpha, [7, 6]);
-          point(foot, COLORS.green, 4, projectionAlpha);
+          line(xFoot, endpoint, COLORS.blue, 2, projectionAlpha, [7, 6]);
+          point(xFoot, COLORS.green, 4, projectionAlpha);
         }
 
         if (componentsReveal > 0) {
-          arrow(origin, foot, COLORS.green, 4.4, componentsReveal * quiet);
-          drawRightAngle(foot, unit, componentsReveal * quiet);
+          arrow(origin, xFoot, COLORS.green, 4.4, componentsReveal * quiet);
+          drawRightAngle(xFoot, unit, componentsReveal * quiet);
           if (!formulaScene) {
-            const pLabel = map([1.12, 3.48], originX, originY, unit);
-            text("v‖=(3,3)", pLabel[0], pLabel[1], clamp(width * 0.015, 12, 17), COLORS.green, 700);
+            const xComponentLabel = map([2.15, -0.42], originX, originY, unit);
+            text("a₁=(4,0)", xComponentLabel[0], xComponentLabel[1], clamp(width * 0.015, 12, 17), COLORS.green, 700, "center");
           }
         }
 
         if (residualReveal > 0) {
-          const residualEnd = [lerp(foot[0], endpoint[0], residualReveal), lerp(foot[1], endpoint[1], residualReveal)];
-          arrow(foot, residualEnd, COLORS.blue, 4.4, residualReveal * quiet);
+          const residualEnd = [lerp(xFoot[0], endpoint[0], residualReveal), lerp(xFoot[1], endpoint[1], residualReveal)];
+          arrow(xFoot, residualEnd, COLORS.blue, 4.4, residualReveal * quiet);
           if (residualReveal > 0.45 && !formulaScene) {
-            const label = map([3.38, 2.53], originX, originY, unit);
-            text("v⊥=(1,−1)", label[0] - 5, label[1], clamp(width * 0.015, 12, 17), COLORS.blue, 700, "right");
+            const yComponentLabel = map([4.3, 1.06], originX, originY, unit);
+            text("a₂=(0,2)", yComponentLabel[0] + 7, yComponentLabel[1], clamp(width * 0.015, 12, 17), COLORS.blue, 700);
           }
         }
 
         if (verifyReveal > 0 && index === 4) {
-          point(foot, COLORS.gold, 7, 0.24 * verifyReveal);
+          point(xFoot, COLORS.gold, 7, 0.24 * verifyReveal);
           point(endpoint, COLORS.gold, 7, 0.22 * verifyReveal);
         }
 

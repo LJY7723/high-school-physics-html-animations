@@ -7,7 +7,7 @@
 
 ## Changes
 
-- Added an offline, 60-second Canvas lesson with subtitles, scene navigation, playback controls, a worked vector example, and the general projection formula.
+- Added an offline, 60-second Canvas lesson with subtitles, scene navigation, playback controls, and a worked vector example.
 - Added project documentation and listed the project in the workspace README.
 
 ## Verification
