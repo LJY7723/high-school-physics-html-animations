@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-25",
+  "browser": "155.0.8059.85",
+  "offline": true,
+  "remoteRequests": 0,
+  "errors": [],
+  "checks": {
+    "playback": {
+      "time": 1.2461000000715252,
+      "playing": true,
+      "audio": {
+        "time": 1.170874,
+        "paused": false,
+        "muted": false,
+        "volume": 0.65,
+        "duration": 60,
+        "ready": 4
+      }
+    },
+    "paused": true,
+    "seek": true,
+    "chapters": true,
+    "mute": true,
+    "volume": true,
+    "physics30": {
+      "theta": 30,
+      "T": 2.0000000000000004,
+      "N": 1.7320508075688774,
+      "G": 1
+    },
+    "explore": [
+      20,
+      30,
+      65
+    ],
+    "keyboard": true,
+    "fullscreen": true,
+    "transcript": true,
+    "mobileNoOverflow": true,
+    "renderedFrames": 1441,
+    "angleLabelsAgree": true,
+    "full60SecondPlayback": true
+  },
+  "final": {
+    "time": 60,
+    "playing": false,
+    "audio": {
+      "time": 59.939961,
+      "paused": true,
+      "muted": false,
+      "volume": 0.65,
+      "duration": 60,
+      "ready": 4
+    }
+  }
+}

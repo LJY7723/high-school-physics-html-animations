@@ -8,10 +8,11 @@ A shared workspace for browser-based interactive animations developed with Codex
 | --- | --- | --- |
 | [multimeter](projects/multimeter/README.md) | Interactive 3D MF-47 analog multimeter teaching demo with guided steps and quiz mode | [Open `index.html`](projects/multimeter/index.html) |
 | [orthogonal-decomposition](projects/orthogonal-decomposition/README.md) | One-minute high school vector decomposition lesson with a seekable Canvas animation | [Open `index.html`](projects/orthogonal-decomposition/index.html) |
+| [rope-rod-blueprint](projects/rope-rod-blueprint/README.md) | 60-second Chinese physics blueprint film about ropes and rods, with embedded original music and an interactive angle study | [Open `index.html`](projects/rope-rod-blueprint/index.html) |
 
 ## Open and verify
 
-- Open a project's entry HTML file directly in a modern browser. The multimeter and orthogonal decomposition demos are self-contained and work offline.
+- Open a project's entry HTML file directly in a modern browser. The multimeter, orthogonal decomposition and rope/rod demos are self-contained and work offline.
 - Read that project's README before changing code; it lists dependencies and practical verification steps.
 - No root-level package manager or build step is required at present.
 
