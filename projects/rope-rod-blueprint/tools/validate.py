@@ -1,9 +1,17 @@
 from pathlib import Path
-import json,re,math
+import json,re,math,base64,hashlib,subprocess
 ROOT=Path(__file__).resolve().parents[1]
 html=(ROOT/'index.html').read_text(encoding='utf-8')
-report=json.loads((ROOT/'references'/'score-report.json').read_text(encoding='utf-8'))
-assert report['duration']==60 and report['clipped_samples']==0
+music=json.loads((ROOT/'assets'/'music.json').read_text(encoding='utf-8'))
+assert music['effective_speed_factor']==.9 and music['additional_speed_factor']==1
+assert music['source_already_slowed'] and music['excerpt_duration_seconds']==60
+audio=re.search(r'src="data:audio/mpeg;base64,([^"]+)"',html).group(1)
+embedded=base64.b64decode(audio)
+assert hashlib.sha256(embedded).hexdigest()==music['sha256']
+assert embedded==(ROOT/music['file']).read_bytes()
+probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_format','-show_streams','-of','json',str(ROOT/music['file'])]))
+assert abs(float(probe['format']['duration'])-60)<.1
+assert probe['streams'][0]['channels']==2
 assert not re.search(r'''(?:src|href)=["']https?://''',html)
 assert '/*__' not in html
 assert 'data:audio/mpeg;base64,' in html and len(html)>1000000

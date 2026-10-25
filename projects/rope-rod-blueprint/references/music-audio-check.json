@@ -1,0 +1,10 @@
+{
+  "duration_seconds": 60,
+  "input_integrated_lufs": -18.11,
+  "input_true_peak_dbtp": -6.98,
+  "input_loudness_range_lu": 2.1,
+  "clip_risk": false,
+  "effective_speed": 0.9,
+  "additional_speed_factor": 1,
+  "source_already_slowed": true
+}
