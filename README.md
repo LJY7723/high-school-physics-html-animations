@@ -8,7 +8,7 @@ A shared workspace for browser-based interactive animations developed with Codex
 | --- | --- | --- |
 | [multimeter](projects/multimeter/README.md) | Interactive 3D MF-47 analog multimeter teaching demo with guided steps and quiz mode | [Open `index.html`](projects/multimeter/index.html) |
 | [orthogonal-decomposition](projects/orthogonal-decomposition/README.md) | One-minute high school vector decomposition lesson with a seekable Canvas animation | [Open `index.html`](projects/orthogonal-decomposition/index.html) |
-| [rope-rod-blueprint](projects/rope-rod-blueprint/README.md) | 60-second Chinese physics blueprint film about ropes and rods, with embedded original music and an interactive angle study | [Open `index.html`](projects/rope-rod-blueprint/index.html) |
+| [rope-rod-blueprint](projects/rope-rod-blueprint/README.md) | 60-second Chinese physics blueprint film about ropes and rods, with embedded We Never (Remix) 0.9x music and an interactive angle study | [Open `index.html`](projects/rope-rod-blueprint/index.html) |
 
 ## Open and verify
 

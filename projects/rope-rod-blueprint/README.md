@@ -1,6 +1,6 @@
 # 轻绳与轻杆 · 受力之间
 
-一部 60 秒的高中物理 HTML 动画，采用 Claude Opus 5.5 Style 技能中的蓝图／工程制图风格。原创二维制图、中文讲解字幕、原创器乐背景音乐均在本项目中制作。
+一部 60 秒的高中物理 HTML 动画，采用 Claude Opus 5.5 Style 技能中的蓝图／工程制图风格，包含原创二维制图与中文讲解字幕。背景音乐按用户要求替换为《We Never (Remix)》0.9x。
 
 ## 运行
 
@@ -19,9 +19,11 @@
 
 ## 来源与制作
 
-备课来源、页码和物理边界见 `references/source-notes.md`。原始课件与技能样片保持原样。音乐为项目原创合成室内乐，无第三方录音及网络素材。中文字体使用操作系统字体回退，不分发商业字体。
+备课来源、页码和物理边界见 `references/source-notes.md`。原始课件与技能样片保持原样。中文字体使用操作系统字体回退，不分发商业字体。
 
-源码位于 `src/`。`tools/compose_score.py` 用 NumPy 制作配乐；`tools/build.py` 通过 FFmpeg 编码并将配乐、CSS、JS 内嵌为 `index.html`。
+当前音乐来自与用户给定名称完全对应的 Bilibili 视频（BV1mLWw6VEux，一支yuuu），采用开头60秒，0.35秒淡入、最后2秒淡出，并作响度归一化。该音源本身已为0.9x，浏览器以1倍速播放，避免再次减速到0.81x。音频及来源清单位于 `assets/`，版权归相应权利人，本项目不主张音乐所有权或再分发许可。
+
+源码位于 `src/`。运行 `python tools/build.py` 将已处理音乐、CSS、JS 内嵌为 `index.html`。旧版原创配乐生成器 `tools/compose_score.py` 和 `references/score-report.json` 仅保留作为制作历史，不再是当前背景音乐。
 
 ## 检查
 

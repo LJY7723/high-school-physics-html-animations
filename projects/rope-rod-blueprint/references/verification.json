@@ -4,12 +4,18 @@
   "offline": true,
   "remoteRequests": 0,
   "errors": [],
+  "music": {
+    "title": "We Never (Remix)",
+    "effectiveSpeed": 0.9,
+    "sourceAlreadySlowed": true,
+    "browserPlaybackRate": 1
+  },
   "checks": {
     "playback": {
-      "time": 1.2461000000715252,
+      "time": 1.229999999999999,
       "playing": true,
       "audio": {
-        "time": 1.170874,
+        "time": 1.175657,
         "paused": false,
         "muted": false,
         "volume": 0.65,
@@ -45,7 +51,7 @@
     "time": 60,
     "playing": false,
     "audio": {
-      "time": 59.939961,
+      "time": 59.947029,
       "paused": true,
       "muted": false,
       "volume": 0.65,

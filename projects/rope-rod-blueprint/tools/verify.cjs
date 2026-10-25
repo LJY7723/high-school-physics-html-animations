@@ -17,6 +17,8 @@ const browserPath=process.env.CHROMIUM_PATH||'C:/Program Files/Google/Chrome/App
  await page.locator('#play').click();await page.waitForTimeout(1200);
  const playing=await page.evaluate(()=>({time:FILM.state.time,playing:FILM.state.playing,audio:FILM.getAudio()}));
  assert(playing.playing&&playing.time>.8&&!playing.audio.paused);
+ assert.equal(await page.locator('#score').evaluate(el=>el.playbackRate),1);
+ assert.equal(await page.locator('#score').getAttribute('data-version'),'0.9x');
  assert(playing.audio.duration>59.9&&playing.audio.duration<60.1);
  await page.locator('#play').click();const pauseAt=await page.evaluate(()=>FILM.state.time);await page.waitForTimeout(350);assert(Math.abs(await page.evaluate(()=>FILM.state.time)-pauseAt)<.01);
  await page.locator('#seek').evaluate(el=>{el.value=32;el.dispatchEvent(new Event('input',{bubbles:true}));});
@@ -41,7 +43,7 @@ const browserPath=process.env.CHROMIUM_PATH||'C:/Program Files/Google/Chrome/App
  await page.context().setOffline(true);await page.reload();await page.waitForFunction(()=>window.READY);assert.equal(remote.length,0);
  if(full){await page.locator('#start').click();await page.waitForFunction(()=>FILM.state.time>=60,{},{timeout:75000});assert.equal(await page.evaluate(()=>FILM.state.playing),false);}
  const final=await page.evaluate(()=>({time:FILM.state.time,playing:FILM.state.playing,audio:FILM.getAudio()}));
- const report={date:'2026-10-25',browser:await browser.version(),offline:true,remoteRequests:remote.length,errors,checks:{playback:playing,paused:true,seek:true,chapters:true,mute:true,volume:true,physics30:eq,explore:[20,30,65],keyboard:true,fullscreen:true,transcript:true,mobileNoOverflow:true,renderedFrames:allFrames,angleLabelsAgree:true,full60SecondPlayback:full},final};
+ const report={date:'2026-10-25',browser:await browser.version(),offline:true,remoteRequests:remote.length,errors,music:{title:'We Never (Remix)',effectiveSpeed:.9,sourceAlreadySlowed:true,browserPlaybackRate:1},checks:{playback:playing,paused:true,seek:true,chapters:true,mute:true,volume:true,physics30:eq,explore:[20,30,65],keyboard:true,fullscreen:true,transcript:true,mobileNoOverflow:true,renderedFrames:allFrames,angleLabelsAgree:true,full60SecondPlayback:full},final};
  fs.writeFileSync(path.join(refs,'verification.json'),JSON.stringify(report,null,2));assert.deepEqual(errors,[]);
  console.log(JSON.stringify(report,null,2));await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
