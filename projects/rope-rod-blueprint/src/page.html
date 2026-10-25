@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a1220">
+<title>轻绳与轻杆 · 受力之间</title>
+<style>/*__CSS__*/</style>
+</head>
+<body>
+<main class="app">
+  <header class="masthead"><div class="identity"><span class="brandmark" aria-hidden="true">⌖</span><div><span class="brand">力学手记</span><span class="edition">THE MECHANICS ATELIER</span></div></div><div class="issue"><span>必修一 · 共点力平衡</span><b>FILM 003.5</b></div></header>
+  <section class="player" aria-label="轻绳与轻杆，一分钟教学动画">
+    <div class="stage" id="stage">
+      <canvas id="film" width="1920" height="1080" aria-label="蓝图动画，展示轻绳、轻杆及其受力图"></canvas>
+      <div class="gate" id="gate"><button id="start" class="start"><span class="start-triangle" aria-hidden="true">▶</span><span><strong>开始放映</strong><small>60 秒 · 原创配乐</small></span><span class="start-arrow" aria-hidden="true">↗</span></button></div>
+      <div class="explore-badge" id="exploreBadge" hidden>自由探究 <span>静态平衡态</span></div>
+      <div class="sound-hint" id="soundHint">点击开始，同步开启背景音乐</div>
+    </div>
+    <div class="transport">
+      <div class="progress-wrap"><input id="seek" class="seek" type="range" min="0" max="60" step="0.01" value="0" aria-label="动画进度，单位秒"></div>
+      <div class="toolbar"><div class="tools-left"><button id="play" class="icon-btn" aria-label="播放" title="播放／暂停（空格）"><span id="playGlyph">▶</span></button><button id="restart" class="icon-btn" aria-label="重新播放" title="重新播放（R）">↺</button><span class="time"><span id="current">00:00</span><i>/</i>01:00</span><span class="now" id="now">序 · 受力之间</span></div><div class="tools-right"><button id="music" class="music-btn" aria-label="静音背景音乐" aria-pressed="false" title="音乐开关（M）"><span aria-hidden="true">♫</span><span id="musicText">配乐</span></button><input id="volume" type="range" min="0" max="1" step="0.01" value="0.65" aria-label="背景音乐音量"><button id="fullscreen" class="icon-btn fullscreen" aria-label="全屏放映" title="全屏（F）">⛶</button></div></div>
+      <nav class="chapters" aria-label="动画章节"><button data-time="0" class="chapter active"><span>00</span>序章</button><button data-time="6.25" class="chapter"><span>01</span>绳的语言</button><button data-time="16.25" class="chapter"><span>02</span>杆的两面</button><button data-time="26.25" class="chapter"><span>03</span>铰接平衡</button><button data-time="40" class="chapter"><span>04</span>固定连接</button><button data-time="50" class="chapter"><span>05</span>一眼辨认</button></nav>
+    </div>
+  </section>
+  <section class="lab" aria-label="自由探究控制"><div class="lab-title"><span class="lab-icon" aria-hidden="true">∠</span><div><b>把角度交给你</b><p>斜绳越平，拉力会怎样？</p></div></div><button id="explore" class="explore-btn" aria-pressed="false">自由探究 <span>↗</span></button><div id="labControls" class="lab-controls" hidden><label for="angle">θ <output id="angleValue">30°</output></label><input id="angle" type="range" min="20" max="65" step="1" value="30" aria-label="斜绳与水平的夹角"><button id="returnFilm" class="return-btn">返回影片</button></div></section>
+  <footer><span>蓝图里的物理，一分钟看懂。</span><span class="footer-meta">BLUEPRINT STUDY · 1920 × 1080 · 60s</span><button id="transcriptToggle" aria-expanded="false" aria-controls="transcript">阅读讲解稿 ＋</button></footer>
+  <article id="transcript" hidden><h1>轻绳与轻杆 · 受力之间</h1><p>轻，指质量和自重忽略。绷紧的理想轻绳只能沿绳产生拉力，松弛时张力为零。</p><p>轻杆可以拉，也可以压。两端受力、铰接、处于平衡的轻杆是二力杆，作用力沿两端的连线。</p><p>在斜绳和水平铰接杆支撑重物的模型中，选结点O为研究对象。斜绳与水平夹角为θ，重物重力为G。竖直方向有T sinθ=G，水平方向有N=T cosθ，故T=G/sinθ，N=G/tanθ。θ=30°时，T=2G，N=√3G。</p><p>固定连接的水平杆端安装轻质光滑滑轮，同一根轻绳绕过滑轮，悬挂重物静止。两段绳张力均为G。斜绳与水平成30°，两段绳的夹角为120°，杆对滑轮的作用力大小为G，方向右上，与水平成30°，不沿杆。</p><p>受拉的二力杆可以用等长轻绳代替；受压杆不能，因为绳不能推。分析时先看连接和约束，再画受力图，最后由合力为零求解。</p></article>
+</main>
+<audio id="score" preload="auto" src="data:audio/mpeg;base64,/*__AUDIO__*/"></audio>
+<script>/*__JS__*/</script>
+</body>
+</html>
